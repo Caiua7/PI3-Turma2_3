@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application) // Já inclui 'com.android.application'
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services") // Firebase
+    //id("com.google.gms.google-services") // Firebase
 }
 
 
@@ -60,7 +60,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation (libs.firebase.auth.ktx) // Ou versão mais recente
     implementation(libs.firebase.auth.ktx.v2231)
-    implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
+    implementation(libs.firebase.firestore.ktx)
 
 }
 
