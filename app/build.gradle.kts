@@ -1,10 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application) // Já inclui 'com.android.application'
+    alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    //id("com.google.gms.google-services") // Firebase
-}
+    id("com.google.gms.google-services")
 
+}
 
 android {
     namespace = "com.example.superid"
@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.superid"
-        minSdk = 24
+        minSdk = 33
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -58,11 +58,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation (libs.firebase.auth.ktx) // Ou versão mais recente
-    implementation(libs.firebase.auth.ktx.v2231)
-    implementation(libs.firebase.firestore.ktx)
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation ("com.google.firebase:firebase-auth-ktx")
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+
+
+
 
 }
-
-apply(plugin = "com.google.gms.google-services")
-
