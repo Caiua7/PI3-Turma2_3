@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -39,7 +40,7 @@ import com.example.superid2.ui.theme.SuperID2Theme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
-
+// Faz a 1 tela (splash)
 class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +73,7 @@ fun SplashScreen() {
         )
     }
 }
+
 class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,115 +99,128 @@ fun addNewUser(nome:String, email: String,senha: String) {
     db.collection("Login").add(inserir)
 }
 
+// Tela de registrar (SignUp)
+@Composable
+fun RegisterScreen(onRegisterSuccess: () -> Unit) {
+    var nome by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    var confirmarSenha by remember { mutableStateOf("") }
+    var mensagemErro by remember { mutableStateOf("") }
+    var mostrarPopupTermos by remember { mutableStateOf(true) }
+    var termosAceitos by remember { mutableStateOf(false) }
 
-    @Composable
-    fun RegisterScreen(onRegisterSuccess: () -> Unit) {
-        var nome by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var senha by remember { mutableStateOf("") }
-        var confirmarSenha by remember { mutableStateOf("") }
-        var mensagemErro by remember { mutableStateOf("") }
-        var mostrarPopupTermos by remember { mutableStateOf(true) }
-        var termosAceitos by remember { mutableStateOf(false) }
-
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (mostrarPopupTermos) {
+            TermosPopup(
+                onDismiss = { /* opcionalmente, não faz nada */ },
+                onAceitar = {
+                    termosAceitos = true
+                    mostrarPopupTermos = false
+                }
+            )
+        }
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(300.dp)
+                .padding(bottom = 10.dp)
+        )
+
+        OutlinedTextField(
+            value = nome,
+            onValueChange = { nome = it },
+            label = { Text("Nome", color = Color.White) },
+            leadingIcon = {
+                Icon(Icons.Rounded.Person, contentDescription = null)
+            },
+            textStyle = TextStyle(color = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp)
+        )
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email", color = Color.White) },
+            leadingIcon = { Icon(Icons.Rounded.Email, contentDescription = null) },
+            textStyle = TextStyle(color = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp)
+        )
+
+        OutlinedTextField(
+            value = senha,
+            onValueChange = { senha = it },
+            label = { Text("Senha", color = Color.White) },
+            leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
+            textStyle = TextStyle(color = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp)
+        )
+
+        OutlinedTextField(
+            value = confirmarSenha,
+            onValueChange = { confirmarSenha = it },
+            label = { Text("Confirme a senha", color = Color.White) },
+            leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
+            textStyle = TextStyle(color = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
+        Button(
+            onClick = {
+                //aceitar termos
+                if (!termosAceitos) {
+                    mensagemErro = "Você precisa aceitar os termos de uso."
+                } else if (senha != confirmarSenha) {
+                    mensagemErro = "As senhas não coincidem."
+                } else if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()) {
+                    mensagemErro = "Preencha todos os campos."
+                } else {
+                    //add no firestore(banco de dados) e passa para próxima tela
+                    addNewUser(nome, email, senha)
+                    onRegisterSuccess()
+                }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            if (mostrarPopupTermos) {
-                TermosPopup(
-                    onDismiss = { /* opcionalmente, não faz nada */ },
-                    onAceitar = {
-                        termosAceitos = true
-                        mostrarPopupTermos = false
-                    }
-                )
-            }
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .size(300.dp)
-                    .padding(bottom = 10.dp)
-            )
+            Text("Registrar")
+        }
 
-            OutlinedTextField(
-                value = nome,
-                onValueChange = { nome = it },
-                label = { Text("Nome", color = Color.White) },
-                leadingIcon = {
-                    Icon(Icons.Rounded.Person, contentDescription = null)
-                },
-                textStyle = TextStyle(color = Color.White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp)
-            )
+        Button(
+            onClick = { /* Não faz nada */ },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color(0xFF1B5E20)
+            ),
+            border = BorderStroke(1.dp, Color(0xFF1B5E20)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Já tenho conta", color = Color(0xFFE6EEE7))
+        }
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email", color = Color.White) },
-                leadingIcon = { Icon(Icons.Rounded.Email, contentDescription = null) },
-                textStyle = TextStyle(color = Color.White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp)
-            )
-
-
-            OutlinedTextField(
-                value = senha,
-                onValueChange = { senha = it },
-                label = { Text("Senha", color = Color.White) },
-                leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-                textStyle = TextStyle(color = Color.White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp)
-            )
-            OutlinedTextField(
-                value = confirmarSenha,
-                onValueChange = { confirmarSenha = it },
-                label = { Text("Confirme a senha", color = Color.White) },
-                leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-                textStyle = TextStyle(color = Color.White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-            Button(
-                onClick = {
-                    //aceitar termos
-                    if (!termosAceitos) {
-                        mensagemErro = "Você precisa aceitar os termos de uso."
-                        //senhas diferentes
-                    }else if (senha != confirmarSenha) {
-                        mensagemErro = "As senhas não coincidem."
-                        //se algum campo estiver vazio
-                    } else if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-                        mensagemErro = "Preencha todos os campos."
-                    } else {
-                        //add no firestore(banco de dados) e passa para proxima ela
-                        addNewUser(nome, email, senha)
-                        onRegisterSuccess()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Registrar")
-            }
-            //Mensagem aparece em vermelho caso algo de errado
-            if (mensagemErro.isNotEmpty()) {
-                Text(text = mensagemErro, color = Color.Red)
-            }
+        // Mensagem aparece em vermelho caso algo de errado
+        if (mensagemErro.isNotEmpty()) {
+            Text(text = mensagemErro, color = Color.Red)
         }
     }
+}
 
+// Termos
 @Composable
 fun TermosPopup(
     onDismiss: () -> Unit,
@@ -306,6 +321,7 @@ fun TermosPopup(
     }
 }
 
+// class para "tela" explicando app
 class DescricaoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -368,6 +384,7 @@ fun DescricaoScreen(onContinuar: () -> Unit) {
     }
 }
 // -----------------------------------------------------------------------------
+// Tela das senhas (Home)
 @Composable
 fun SenhasScreen() {
     val verde = Color(0xFF4CAF50)
@@ -405,6 +422,8 @@ class TelaSenhasActivity : ComponentActivity() {
     }
 }
 
+
+// Lista onde fica todas as senhas (inicio ainda)
 @Composable
 fun TelaSenhas() {
     val verde = Color(0xFF4CAF50)
