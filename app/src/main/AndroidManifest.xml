@@ -33,6 +33,11 @@
             android:name=".Telas.RegisterActivity"
             android:exported="true" />
 
+        <!-- 🟣 Tela de senhas (nova) -->
+        <activity
+            android:name=".Telas.TelaSenhasActivity"
+            android:exported="true" />
+
         <!-- 🔵 Tela principal -->
         <activity
             android:name=".MainActivity"
