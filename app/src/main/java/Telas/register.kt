@@ -1,4 +1,4 @@
-package Telas
+package com.example.superid.Telas
 
 import android.R.style
 import com.example.superid.MainActivity
@@ -51,7 +51,7 @@ class SplashActivity : ComponentActivity() {
 
         // Redireciona após 3 segundos
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, RegisterActivity::class.java))
+            startActivity(Intent(this, DescricaoActivity::class.java))
             finish()
         }, 3000)
     }
@@ -300,6 +300,68 @@ fun TermosPopup(
                     ) {
                         Text("Aceitar", color = Color.Black)
                     }
+                }
+            }
+        }
+    }
+}
+
+class DescricaoActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            SuperID2Theme {
+                DescricaoScreen {
+                    startActivity(Intent(this, RegisterActivity::class.java))
+                    finish()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DescricaoScreen(onContinuar: () -> Unit) {
+    val verde = Color(0xFF4CAF50)
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color.Black
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .background(Color(0xFF1E1E1E), RoundedCornerShape(16.dp))
+                    .padding(24.dp), // Padding interno do "quadrado"
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(200.dp)
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "O SuperID é um app de autenticação e gerenciamento de senhas, " +
+                            "criado para te ajudar a manter seus logins organizados e com mais praticidade.",
+                    color = verde,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = onContinuar,
+                    colors = ButtonDefaults.buttonColors(containerColor = verde)
+                ) {
+                    Text("Continuar", color = Color.Black)
                 }
             }
         }
