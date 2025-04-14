@@ -62,7 +62,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation ("com.google.firebase:firebase-auth-ktx")
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
-
+    implementation ("androidx.compose.material3:material3:1.3.2") // ou mais recente
+    implementation ("androidx.compose.ui:ui:1.5.0")
+    implementation ("androidx.activity:activity-compose:1.7.2")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.5.0")
 
 
 
