@@ -1,5 +1,6 @@
 package com.example.superid2
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -38,7 +39,10 @@ import androidx.compose.ui.unit.dp
 import com.example.superid.R
 import com.example.superid2.ui.theme.SuperID2Theme
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
+import android.provider.Settings
+
 
 class registerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,13 +66,15 @@ fun addNewUser(nome:String, email: String,senha: String) {
     db.collection("Login").add(inserir)
 }
 // Tela de registrar (SignUp)
+@SuppressLint("HardwareIds")
 @Composable
 fun RegisterScreen(onRegisterSuccess: () -> Unit) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
-    var mensagemErro by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -77,7 +83,6 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
@@ -90,9 +95,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
             value = nome,
             onValueChange = { nome = it },
             label = { Text("Nome", color = Color.White) },
-            leadingIcon = {
-                Icon(Icons.Rounded.Person, contentDescription = null)
-            },
+            leadingIcon = { Icon(Icons.Rounded.Person, contentDescription = null) },
             textStyle = TextStyle(color = Color.White),
             modifier = Modifier
                 .fillMaxWidth()
@@ -131,35 +134,56 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
-        val context = LocalContext.current
 
         Button(
             onClick = {
-                var mensagemErro = "" // Definição da variável para erro
-
-                // Verificação de senhas
+                // Confirmação se as senhas sao iguais
                 if (senha != confirmarSenha) {
-                    mensagemErro = "As senhas não coincidem."
-                    Toast.makeText(context, mensagemErro, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "As senhas não coincidem.", Toast.LENGTH_SHORT).show()
                 } else if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-                    // Verificação se todos os campos foram preenchidos
-                    mensagemErro = "Preencha todos os campos."
-                    Toast.makeText(context, mensagemErro, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Preencha todos os campos.", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Adiciona usuário no Firestore
-                    addNewUser(nome, email, senha) // Suponho que essa função já esteja implementada
+                    // Usando para criar uma conta no Auth (aqui tem requisito
+                    // de email e senha pelo menos 6 digitos)
+                    val auth = FirebaseAuth.getInstance()
+                    auth.createUserWithEmailAndPassword(email, senha)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val uid = auth.currentUser?.uid
+                                val androidId = Settings.Secure.getString(
+                                    context.contentResolver,
+                                    Settings.Secure.ANDROID_ID
+                                )
 
-                    // Chama função que trata o sucesso do registro
-                    onRegisterSuccess()
+                                // Salva o Nome, email, uid e imei no firestore
+                                val userData = hashMapOf(
+                                    "nome" to nome,
+                                    "email" to email,
+                                    "uid" to uid,
+                                    "imei" to androidId
+                                )
 
-                    // Redireciona para a próxima tela após sucesso
-                    val intent = Intent(context, homeActivity::class.java)
-                    context.startActivity(intent)
-
-                    // Finaliza a tela atual
-                    if (context is Activity) {
-                        context.finish()
-                    }
+                                val db = Firebase.firestore
+                                if (uid != null) {
+                                    db.collection("usuarios").document(uid)
+                                        .set(userData)
+                                        .addOnSuccessListener {
+                                            Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show()
+                                            onRegisterSuccess()
+                                            val intent = Intent(context, homeActivity::class.java)
+                                            context.startActivity(intent)
+                                            if (context is Activity) {
+                                                context.finish()
+                                            }
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(context, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                }
+                            } else {
+                                Toast.makeText(context, "Erro ao criar conta: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
@@ -167,8 +191,5 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
         ) {
             Text("Registrar")
         }
-
     }
 }
-
-
