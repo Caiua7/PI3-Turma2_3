@@ -180,10 +180,10 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
                     containerColor = Color.Transparent,
                     contentColor = verde
                 ),
-                border = BorderStroke(1.dp, verde),
-                modifier = Modifier.fillMaxWidth()
+                border = BorderStroke(0.8.dp, verde),
+                modifier = Modifier.fillMaxWidth(0.8f)
             ) {
-                Text("Já tenho conta", color = Color(0xFFE6EEE7))
+                Text("Não tenho conta", color = Color(0xFFE6EEE7))
             }
         }
 
