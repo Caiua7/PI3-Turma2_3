@@ -56,15 +56,7 @@ class registerActivity : ComponentActivity() {
         }
     }
 }
-fun addNewUser(nome:String, email: String,senha: String) {
-    val db = Firebase.firestore
-    val inserir = hashMapOf(
-        "Nome" to nome,
-        "email" to email,
-        "senha" to senha,
-    )
-    db.collection("Login").add(inserir)
-}
+
 // Tela de registrar (SignUp)
 @SuppressLint("HardwareIds")
 @Composable
@@ -168,10 +160,17 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                     db.collection("usuarios").document(uid)
                                         .set(userData)
                                         .addOnSuccessListener {
-                                            Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show()
-                                            onRegisterSuccess()
-                                            val intent = Intent(context, homeActivity::class.java)
-                                            context.startActivity(intent)
+                                            auth.currentUser?.sendEmailVerification()?.addOnCompleteListener { verificationTask -> //envia email de verificacao, e dps verifica
+                                                if (verificationTask.isSuccessful) {
+                                                    Toast.makeText(context, "Verifique seu e-mail para ativar sua conta.", Toast.LENGTH_LONG).show()
+                                                    val intent = Intent(context, EmailVerificationActivity::class.java)
+                                                    context.startActivity(intent)
+                                                    if (context is Activity) context.finish() //encerra a atividade que verification
+                                                } else {
+                                                    Toast.makeText(context, "Erro ao enviar email de verificação.", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+
                                             if (context is Activity) {
                                                 context.finish()
                                             }
