@@ -41,7 +41,7 @@ import com.example.superid2.ui.theme.SuperID2Theme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlin.jvm.java
-
+//Tela de descricao do APP
 class descricaoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

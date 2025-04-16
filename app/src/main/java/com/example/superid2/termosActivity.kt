@@ -34,8 +34,8 @@ import androidx.compose.ui.window.Dialog
 
 @Composable
 fun TermosPopup(
-    onDismiss: () -> Unit,
-    onAceitar: () -> Unit
+    onDismiss: () -> Unit, //funcao quando quer fechar pop up
+    onAceitar: () -> Unit // quando aceitar os termos
 ) {
     //texto para colocar termos
     val termos = """
@@ -47,9 +47,9 @@ fun TermosPopup(
         Clique em "Aceitar" para começar o cadastro!
     """.trimIndent()
 
-    var checkAceito by remember { mutableStateOf(false) }
+    var checkAceito by remember { mutableStateOf(false) } //controla a checkbox
     //Criar pop-up
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(onDismissRequest ={ /* ao clicar fora nao acontece nada */}) {
         Surface(
             shape = RoundedCornerShape(12.dp),
             color = Color.Black,
@@ -116,7 +116,7 @@ fun TermosPopup(
                 ) {
                     Button(
                         onClick = {
-                            if (checkAceito) {
+                            if (checkAceito)  { //se a checkbox estiver marcada
                                 onAceitar()
                                 onDismiss()
                             }
@@ -133,16 +133,16 @@ fun TermosPopup(
 }
 @Composable
 fun MostrarPopupTermos(
-    mostrarPopup: Boolean,
+    mostrarPopup: Boolean, //define se deve ser mostrado ou nao
     aoFechar: () -> Unit,
     aoAceitar: () -> Unit
 ) {
-    if (mostrarPopup) {
+    if (mostrarPopup) { //true mostra o popup
         TermosPopup(
             onDismiss = aoFechar,
-            onAceitar = {
-                aoAceitar()
-                aoFechar()
+            onAceitar = { //quando usuario aceitar
+                aoAceitar() //marca que aceitou
+                aoFechar() //fecha
             }
         )
     }
