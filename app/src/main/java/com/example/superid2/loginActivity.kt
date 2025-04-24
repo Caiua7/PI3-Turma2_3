@@ -44,6 +44,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.collection.SparseArrayCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,14 +55,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import com.example.superid2.TermosPopup
+import java.text.Normalizer
 
 class loginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,6 +109,7 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
+
         // Conteúdo da tela de login
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
@@ -134,8 +141,21 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
                 leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
                 modifier = Modifier
                     .background(Color.Black)
-                    .padding(bottom = 32.dp)
+                    .padding(bottom = 3.dp)
             )
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(bottom=3.dp),
+                horizontalArrangement = Arrangement.End
+
+            ) {
+                TextButton(onClick = {
+                    val intent = Intent(context, ForgotPasswordActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Recuperar senha", color = Color(0xFFB0BEC5))
+                }
+            }
 
             Button(
                 onClick = {
@@ -153,14 +173,17 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
                                     context.startActivity(Intent(context, homeActivity::class.java))
                                     if (context is Activity) context.finish()
                                 } else {
-                                    Toast.makeText(context, "Senha incorreta", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Senha incorreta", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             } else {
-                                Toast.makeText(context, "Email não encontrado", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Email não encontrado", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }
                         .addOnFailureListener {
-                            Toast.makeText(context, "Erro ao buscar usuário", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Erro ao buscar usuário", Toast.LENGTH_SHORT)
+                                .show()
                         }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = verde),
@@ -196,6 +219,6 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
             )
         }
     }
-}
 
+}
 

@@ -29,6 +29,7 @@
         <activity android:name="com.example.superid2.loginActivity" />
         <activity android:name="com.example.superid2.homeActivity" />
         <activity android:name="com.example.superid2.EmailVerificationActivity" />
+        <activity android:name="com.example.superid2.ForgotPasswordActivity" />
 
     </application>
 </manifest>
