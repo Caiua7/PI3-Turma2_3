@@ -91,8 +91,6 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                 .padding(bottom = 16.dp)
                 .size(32.dp)
                 .clickable {
-                    val intent = Intent(context, loginActivity::class.java)
-                    context.startActivity(intent)
                     if (context is Activity) {
                         context.finish() // fecha a tela de cadastro
                     }
