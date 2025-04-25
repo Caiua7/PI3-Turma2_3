@@ -159,31 +159,19 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
 
             Button(
                 onClick = {
-                    val db = Firebase.firestore
+                    val emailTrimmed = email.trim()
+                    val senhaTrimmed = senha.trim()
 
-                    db.collection("Login")
-                        .whereEqualTo("email", email)
-                        .get()
-                        .addOnSuccessListener { documents ->
-                            if (!documents.isEmpty) {
-                                val userDoc = documents.documents[0]
-                                val senhaNoBanco = userDoc.getString("senha")
-
-                                if (senhaNoBanco == senha) {
-                                    context.startActivity(Intent(context, homeActivity::class.java))
-                                    if (context is Activity) context.finish()
-                                } else {
-                                    Toast.makeText(context, "Senha incorreta", Toast.LENGTH_SHORT)
-                                        .show()
-                                }
+                    Firebase.auth.signInWithEmailAndPassword(emailTrimmed, senhaTrimmed)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                // Login ok! Vai pra próxima tela
+                                context.startActivity(Intent(context, homeActivity::class.java))
+                                if (context is Activity) context.finish()
                             } else {
-                                Toast.makeText(context, "Email não encontrado", Toast.LENGTH_SHORT)
-                                    .show()
+                                Toast.makeText(context, "Email ou senha incorretos", Toast.LENGTH_SHORT).show()
+                                Log.e("LOGIN", "Erro: ${task.exception?.message}")
                             }
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(context, "Erro ao buscar usuário", Toast.LENGTH_SHORT)
-                                .show()
                         }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = verde),
