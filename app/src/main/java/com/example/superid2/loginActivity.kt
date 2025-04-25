@@ -161,6 +161,10 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
                 onClick = {
                     val emailTrimmed = email.trim()
                     val senhaTrimmed = senha.trim()
+                    if (emailTrimmed.isEmpty() || senhaTrimmed.isEmpty()) {
+                        Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
+                        return@Button //como estava crashando, ele sai da funcao evitando o resto do codigo(o que tem embaixo)
+                    }
 
                     Firebase.auth.signInWithEmailAndPassword(emailTrimmed, senhaTrimmed)
                         .addOnCompleteListener { task ->
