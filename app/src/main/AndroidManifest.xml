@@ -13,14 +13,9 @@
         android:theme="@style/Theme.SuperID2"
         tools:targetApi="31">
 
-        <!-- 🆕 Activity da tela de descrição -->
-        <activity
-            android:name=".Telas.DescricaoActivity"
-            android:exported="true" />
-
         <!-- 🟡 Splash (tela inicial) -->
         <activity
-            android:name=".Telas.SplashActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,22 +23,13 @@
             </intent-filter>
         </activity>
 
-        <!-- 🟢 Tela de cadastro -->
-        <activity
-            android:name=".Telas.RegisterActivity"
-            android:exported="true" />
 
-        <!-- 🟣 Tela de senhas (nova) -->
-        <activity
-            android:name=".Telas.TelaSenhasActivity"
-            android:exported="true" />
-
-        <!-- 🔵 Tela principal -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.SuperID2" />
+        <activity android:name="com.example.superid2.descricaoActivity" />
+        <activity android:name="com.example.superid2.registerActivity" />
+        <activity android:name="com.example.superid2.loginActivity" />
+        <activity android:name="com.example.superid2.homeActivity" />
+        <activity android:name="com.example.superid2.EmailVerificationActivity" />
+        <activity android:name="com.example.superid2.ForgotPasswordActivity" />
 
     </application>
 </manifest>
