@@ -1,4 +1,4 @@
-package com.example.superid
+package com.example.superid2
 
 import android.os.Bundle
 import android.util.Log
@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
+        val cryptoManager = CryptoManager()
         setContent {
             SuperID2Theme {
                 LoginApp()
