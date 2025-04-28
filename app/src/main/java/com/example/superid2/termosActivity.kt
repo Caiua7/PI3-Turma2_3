@@ -39,13 +39,42 @@ fun TermosPopup(
 ) {
     //texto para colocar termos
     val termos = """
-        Bem Vindo ao SuperID, leia atentamente os termos:
-        1 - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
-        2 - bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.
-        3 - cccccccccccccccccccccccccccccccccccccccccccccccccccccccc.
-        
-        Clique em "Aceitar" para começar o cadastro!
-    """.trimIndent()
+    Bem-vindo ao SuperID! Leia atentamente os termos de uso antes de utilizar nosso aplicativo:
+
+    1. **Sobre o Aplicativo**  
+    O SuperID é um gerenciador de autenticações que permite o cadastro, armazenamento e uso de credenciais de forma segura. 
+    O aplicativo foi desenvolvido para proporcionar uma maneira prática e segura de gerenciar suas senhas e facilitar o login em diferentes serviços.
+
+    2. **Dados Coletados**  
+    Ao utilizar o SuperID, você concorda em fornecer as seguintes informações:
+    - **E-mail e UID** (identificador único) do Firebase Authentication;
+    - **Senhas** e **logins** que você cadastrar dentro do aplicativo;
+    - **Tokens de acesso** gerados para autenticação interna.
+
+    Esses dados são armazenados em serviços do **Google Firebase**, de forma privada e associada exclusivamente à sua conta.
+
+    3. **Uso dos Dados**  
+    As informações coletadas têm como finalidade:
+    - Gerenciar suas credenciais de forma segura no aplicativo;
+    - Permitir seu login e identificação dentro do app;
+    - Melhorar a experiência de uso no sistema.
+
+    Nenhum dado será compartilhado com terceiros ou utilizado para fins comerciais.
+
+    4. **Riscos e Limitações**  
+    - O aplicativo **não garante** segurança absoluta dos dados.
+    - Não nos responsabilizamos por eventuais perdas de dados ou acessos indevidos decorrentes de falhas técnicas.
+    
+    5. **Consentimento**  
+    Ao clicar em "Aceitar", você declara que:
+    - Leu e compreendeu estes Termos de Uso e a Política de Privacidade;
+    - Concorda com a coleta, armazenamento e utilização dos seus dados conforme descrito;
+       - Está ciente de que o aplicativo não oferece garantias plenas de segurança.
+
+    
+
+    **Clique em "Aceitar" para começar o cadastro!**
+""".trimIndent()
 
     var checkAceito by remember { mutableStateOf(false) } //controla a checkbox
     //Criar pop-up
