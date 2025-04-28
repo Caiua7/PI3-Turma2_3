@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import android.util.Base64
 import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.example.superid2.ui.theme.SuperID2Theme
 import com.google.firebase.auth.FirebaseAuth
@@ -39,6 +40,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.security.SecureRandom
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+// usuário gerencia suas senhas
 class homeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +51,7 @@ class homeActivity : ComponentActivity() {
         }
     }
 }
-//funcao para mandar os dados da senha para o firestore:
+
 data class Senha(
     val titulo: String,
     val login: String,
@@ -66,6 +68,34 @@ fun TelaSenhas() {
     val listaSenhas = remember { mutableStateListOf<Senha>() }
     val context = LocalContext.current
 
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val uid = auth.currentUser?.uid // UID do usuário que logou
+
+    // Quando a tela for carregada, buscar as senhas salvas
+    LaunchedEffect(Unit) {  // executa uma vez quando composable abre
+        if (uid != null) {
+            db.collection("usuarios")
+                .document(uid)
+                .collection("senhas")
+                .get() // le todos os documentos dentro de (usuarios/uid/senhas)
+                .addOnSuccessListener { result ->
+                    listaSenhas.clear() // Limpa a lista local
+                    for (document in result) {
+                        val titulo = document.getString("titulo") ?: ""
+                        val login = document.getString("login") ?: ""
+                        val senha = document.getString("senha") ?: ""
+                        val accessToken = document.getString("accessToken") ?: ""
+                        listaSenhas.add(Senha(titulo, login, senha, accessToken)) //Adiciona todas as senhas na lista local
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(context, "Erro ao carregar senhas", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    // Layout da tela
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,9 +103,11 @@ fun TelaSenhas() {
             .padding(20.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        // Título da seção de cadastro
         Text("Cadastrar Nova Senha", color = verde, style = MaterialTheme.typography.headlineSmall)
 
         Spacer(modifier = Modifier.height(16.dp))
+
 
         OutlinedTextField(
             value = titulo,
@@ -97,6 +129,7 @@ fun TelaSenhas() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+
         OutlinedTextField(
             value = senha,
             onValueChange = { senha = it },
@@ -107,34 +140,32 @@ fun TelaSenhas() {
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Botão de salvar senha
         Button(
             onClick = {
                 if (titulo.isNotBlank() && login.isNotBlank() && senha.isNotBlank()) {
-                    val novoToken = gerarAccessToken() //gera token aleatorio
+                    val novoToken = gerarAccessToken() // Gerar token aleatório
                     val novaSenha = Senha(titulo, login, senha, novoToken)
-                    listaSenhas.add(novaSenha)
-
-                    val db = FirebaseFirestore.getInstance()
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid //pega uid do usuario
+                    listaSenhas.add(novaSenha) // Adicionar na lista local
 
                     if (uid != null) {
-                        db.collection("usuarios") //acessa colecao usuarios
-                            .document(uid) //pega uid do usuario
-                            .collection("senhas") //adiciona o documento com os dados de senha
+                        db.collection("usuarios")
+                            .document(uid)
+                            .collection("senhas")
                             .add(hashMapOf(
                                 "titulo" to novaSenha.titulo,
                                 "login" to novaSenha.login,
                                 "senha" to novaSenha.senha,
                                 "accessToken" to novaSenha.accessToken
-                            ))
+                            )) //add todas as infos dentro de senha pro usuario
                             .addOnSuccessListener {
                                 Toast.makeText(context, "Senha adicionada!", Toast.LENGTH_SHORT).show()
                             }
-                            .addOnFailureListener { e ->
+                            .addOnFailureListener {
                                 Toast.makeText(context, "Erro!", Toast.LENGTH_SHORT).show()
                             }
                     }
-                    //limpa os campos
+                    // Limpar os campos depois de salvar
                     titulo = ""
                     login = ""
                     senha = ""
@@ -148,10 +179,12 @@ fun TelaSenhas() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text("Senhas Salvas",color = verde, style = MaterialTheme.typography.headlineSmall)
+        // Título da seção de senhas salvas
+        Text("Senhas Salvas", color = verde, style = MaterialTheme.typography.headlineSmall)
 
         Spacer(modifier = Modifier.height(12.dp))
-        //loop para mostrar as senhas
+
+        // Listar todas as senhas já carregadas
         for ((tituloSalvo, loginSalvo, senhaSalva) in listaSenhas) {
             Card(
                 modifier = Modifier
@@ -168,11 +201,12 @@ fun TelaSenhas() {
         }
     }
 }
-//funcao para gerar token
+
+// Função para gerar um token de acesso seguro
 @OptIn(ExperimentalEncodingApi::class)
 fun gerarAccessToken(): String {
-    val randomBytes = ByteArray(192) //cria um array de 192 bytes
-    SecureRandom().nextBytes(randomBytes) //valores aleatorios
-    val tokenBase64 = Base64.encodeToString(randomBytes, Base64.NO_WRAP) //converte os bytes em string
-    return tokenBase64.take(256) //garante que tenha 256 caracteres
+    val randomBytes = ByteArray(192) // Cria um array de 192 bytes
+    SecureRandom().nextBytes(randomBytes) // Preenche com valores aleatórios
+    val tokenBase64 = Base64.encodeToString(randomBytes, Base64.NO_WRAP) // Codifica em base64
+    return tokenBase64.take(256) // Retorna 256 caracteres
 }
