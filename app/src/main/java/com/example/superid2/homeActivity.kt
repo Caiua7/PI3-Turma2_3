@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import android.util.Base64
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.example.superid2.ui.theme.SuperID2Theme
@@ -56,8 +57,10 @@ data class Senha(
     val titulo: String,
     val login: String,
     val senha: String,
-    val accessToken: String
+    val accessToken: String,
+    val categoria: String
 )
+
 
 @Composable
 fun TelaSenhas() {
@@ -67,6 +70,12 @@ fun TelaSenhas() {
     var senha by remember { mutableStateOf("") }
     val listaSenhas = remember { mutableStateListOf<Senha>() }
     val context = LocalContext.current
+
+    var selectedCategoria by remember { mutableStateOf("Sites Web") }
+    val categorias = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+    var filtroCategoria by remember { mutableStateOf("Todas") }
+    var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
+
 
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
@@ -86,7 +95,9 @@ fun TelaSenhas() {
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
                         val accessToken = document.getString("accessToken") ?: ""
-                        listaSenhas.add(Senha(titulo, login, senha, accessToken)) //Adiciona todas as senhas na lista local
+                        val categoria = document.getString("categoria") ?: "Sites Web" // padrão
+                        listaSenhas.add(Senha(titulo, login, senha, accessToken, categoria))
+
                     }
                 }
                 .addOnFailureListener { e ->
@@ -108,7 +119,6 @@ fun TelaSenhas() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
         OutlinedTextField(
             value = titulo,
             onValueChange = { titulo = it },
@@ -118,6 +128,39 @@ fun TelaSenhas() {
         )
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Botão "Categoria"
+        OutlinedTextField(
+            value = selectedCategoria,
+            onValueChange = {}, // Não permite digitar
+            label = { Text("Categoria", color = Color.White) },
+            textStyle = TextStyle(color = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { mostrarOpcoesCategoria = !mostrarOpcoesCategoria }, // Abre o menu ao clicar
+            enabled = false, // desativa digitação
+            readOnly = true // somente leitura
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Se mostrarOpcoesCategoria for true, mostra as opções
+        if (mostrarOpcoesCategoria) {
+            categorias.forEach { categoria ->
+                Button(
+                    onClick = {
+                        selectedCategoria = categoria
+                        mostrarOpcoesCategoria = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ) {
+                    Text(categoria, color = Color.White)
+                }
+            }
+        }
 
         OutlinedTextField(
             value = login,
@@ -145,7 +188,7 @@ fun TelaSenhas() {
             onClick = {
                 if (titulo.isNotBlank() && login.isNotBlank() && senha.isNotBlank()) {
                     val novoToken = gerarAccessToken() // Gerar token aleatório
-                    val novaSenha = Senha(titulo, login, senha, novoToken)
+                    val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria)
                     listaSenhas.add(novaSenha) // Adicionar na lista local
 
                     if (uid != null) {
@@ -156,8 +199,10 @@ fun TelaSenhas() {
                                 "titulo" to novaSenha.titulo,
                                 "login" to novaSenha.login,
                                 "senha" to novaSenha.senha,
-                                "accessToken" to novaSenha.accessToken
-                            )) //add todas as infos dentro de senha pro usuario
+                                "accessToken" to novaSenha.accessToken,
+                                "categoria" to novaSenha.categoria // <-- aqui
+                            ))
+                            //add todas as infos dentro de senha pro usuario
                             .addOnSuccessListener {
                                 Toast.makeText(context, "Senha adicionada!", Toast.LENGTH_SHORT).show()
                             }
@@ -184,21 +229,49 @@ fun TelaSenhas() {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Listar todas as senhas já carregadas
-        for ((tituloSalvo, loginSalvo, senhaSalva) in listaSenhas) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
+        // --------------------------------------------
+        // FILTRO DA CATEGORIA
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text("Filtrar por Categoria:", color = Color.White, style = MaterialTheme.typography.bodyLarge)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val opcoesFiltro = listOf("Todas", "Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+        opcoesFiltro.forEach { opcao ->
+            Button(
+                onClick = { filtroCategoria = opcao },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (filtroCategoria == opcao) verde else Color.DarkGray
+                ),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text("🔐 $tituloSalvo", color = verde)
-                    Text("Login: $loginSalvo", color = Color.White)
-                    Text("Senha: $senhaSalva", color = Color.White)
-                }
+                Text(opcao, color = Color.White)
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        //----------------------------------------------
+
+        // Listar todas as senhas já carregadas
+        listaSenhas
+            .filter { filtroCategoria == "Todas" || it.categoria == filtroCategoria }
+            .forEach { senhaItem ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("🔐 ${senhaItem.titulo}", color = verde)
+                        Text("Categoria: ${senhaItem.categoria}", color = Color.Gray)
+                        Text("Login: ${senhaItem.login}", color = Color.White)
+                        Text("Senha: ${senhaItem.senha}", color = Color.White)
+                    }
+                }
+            }
     }
 }
 
