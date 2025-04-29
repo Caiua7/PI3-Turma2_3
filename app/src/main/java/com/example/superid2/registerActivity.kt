@@ -54,7 +54,6 @@ class registerActivity : ComponentActivity() {
         setContent {
             SuperID2Theme {
                 RegisterScreen(onRegisterSuccess = {
-
                 })
             }
         }
@@ -191,23 +190,11 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                                 auth.currentUser?.sendEmailVerification()
                                                     ?.addOnCompleteListener { verificationTask -> //envia email de verificacao, e dps verifica
                                                         if (verificationTask.isSuccessful) {
-                                                            Toast.makeText(
-                                                                context,
-                                                                "Verifique seu e-mail para ativar sua conta.",
-                                                                Toast.LENGTH_LONG
-                                                            ).show()
-                                                            val intent = Intent(
-                                                                context,
-                                                                EmailVerificationActivity::class.java
-                                                            )
+                                                            Toast.makeText(context, "Verifique seu e-mail para ativar sua conta.", Toast.LENGTH_LONG).show()
+                                                            val intent = Intent(context, EmailVerificationActivity::class.java)
                                                             context.startActivity(intent)
                                                             if (context is Activity) context.finish() //encerra a atividade que verification
-                                                        } else {
-                                                            Toast.makeText(
-                                                                context,
-                                                                "Erro ao enviar email de verificação.",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
+                                                        } else { Toast.makeText(context, "Erro ao enviar email de verificação.", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
 
@@ -216,19 +203,11 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                                 }
                                             }
                                             .addOnFailureListener { e ->
-                                                Toast.makeText(
-                                                    context,
-                                                    "Erro ao salvar dados: ${e.message}",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                                Toast.makeText(context, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
                                             }
                                     }
                                 } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Erro ao criar conta: ${task.exception?.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toast.makeText(context, "Erro ao criar conta: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                     }
