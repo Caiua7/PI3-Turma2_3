@@ -61,6 +61,11 @@ data class Senha(
     val categoria: String
 )
 
+data class SenhaCriptografada(
+    val senha: String,
+    val iv: String
+)
+
 
 @Composable
 fun TelaSenhas() {
@@ -76,7 +81,7 @@ fun TelaSenhas() {
     var filtroCategoria by remember { mutableStateOf("Todas") }
     var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
 
-
+    val cryptoManager = CryptoManager()
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid // UID do usuário que logou
@@ -94,9 +99,18 @@ fun TelaSenhas() {
                         val titulo = document.getString("titulo") ?: ""
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
+                        val iv = document.getString("iv") ?: ""
+                        val senhaDescriptografada = try {
+                            val ivBytes = Base64.decode(iv, Base64.NO_WRAP)
+                            val encryptedBytes = Base64.decode(senha, Base64.NO_WRAP)
+                            val descriptografia = cryptoManager.decrypt(ivBytes, encryptedBytes)
+                            descriptografia.toString(Charsets.UTF_8)
+                        } catch (e: Exception) {
+                            "Erro ao descriptografar"
+                        }
                         val accessToken = document.getString("accessToken") ?: ""
                         val categoria = document.getString("categoria") ?: "Sites Web" // padrão
-                        listaSenhas.add(Senha(titulo, login, senha, accessToken, categoria))
+                        listaSenhas.add(Senha(titulo, login, senhaDescriptografada, accessToken, categoria))
 
                     }
                 }
@@ -187,8 +201,13 @@ fun TelaSenhas() {
         Button(
             onClick = {
                 if (titulo.isNotBlank() && login.isNotBlank() && senha.isNotBlank()) {
+                    val bytes = senha.encodeToByteArray()
+                    val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
+                    val senhaCriptografadaString = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
+                    val ivString = Base64.encodeToString(iv, Base64.NO_WRAP)
                     val novoToken = gerarAccessToken() // Gerar token aleatório
                     val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria)
+                    val novaSenhaCriptografada = SenhaCriptografada(senhaCriptografadaString, ivString)
                     listaSenhas.add(novaSenha) // Adicionar na lista local
 
                     if (uid != null) {
@@ -198,7 +217,8 @@ fun TelaSenhas() {
                             .add(hashMapOf(
                                 "titulo" to novaSenha.titulo,
                                 "login" to novaSenha.login,
-                                "senha" to novaSenha.senha,
+                                "senha" to novaSenhaCriptografada.senha,
+                                "iv" to novaSenhaCriptografada.iv,
                                 "accessToken" to novaSenha.accessToken,
                                 "categoria" to novaSenha.categoria // <-- aqui
                             ))
