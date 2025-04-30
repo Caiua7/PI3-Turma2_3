@@ -5,6 +5,7 @@ import android.security.keystore.KeyProperties
 import java.io.InputStream
 import java.io.OutputStream
 import java.security.KeyStore
+import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -43,29 +44,17 @@ class CryptoManager {
         }.generateKey()
     }
 
-    fun encrypt(bytes: ByteArray, outputStream: OutputStream): ByteArray {
-        val encryptedBytes = encryptCipher.doFinal(bytes)
-        outputStream.use {
-            it.write(encryptCipher.iv.size)
-            it.write(encryptCipher.iv)
-            it.write(encryptedBytes.size)
-            it.write(encryptedBytes)
-        }
-        return encryptedBytes
+    fun encrypt(bytes: ByteArray): Pair<ByteArray, ByteArray> {
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        cipher.init(Cipher.ENCRYPT_MODE, getKey())
+        val iv = cipher.iv
+        val encryptedBytes = cipher.doFinal(bytes)
+        return Pair(iv, encryptedBytes)
     }
 
-    fun decrypt(inputStream: InputStream): ByteArray {
-        return inputStream.use {
-            val ivSize = it.read()
-            val iv = ByteArray(ivSize)
-            it.read(iv)
-
-            val encryptedBytesSize = it.read()
-            val encryptedBytes = ByteArray(encryptedBytesSize)
-            it.read(encryptedBytes)
-
-            getDecryptCipherForIv(iv).doFinal(encryptedBytes)
-        }
+    fun decrypt(iv: ByteArray, encryptedData: ByteArray): ByteArray {
+        val cipher = getDecryptCipherForIv(iv)
+        return cipher.doFinal(encryptedData)
     }
 
     companion object {
