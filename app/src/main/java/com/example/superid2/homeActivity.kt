@@ -53,6 +53,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.res.painterResource
 import com.example.superid.R
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
+
+
+
+
+
 
 // usuário gerencia suas senhas
 class homeActivity : ComponentActivity() {
@@ -155,6 +163,12 @@ fun TelaSenhas() {
                 Spacer(modifier = Modifier.height(16.dp))
             }
             //exibicao das senhas filtradas
+
+
+            // variáveis de estado para edição/exclusão
+            var senhaParaEditar by remember { mutableStateOf<Senha?>(null) }
+            var senhaParaExcluir by remember { mutableStateOf<Senha?>(null) }
+
             listaSenhas
                 .filter { filtroCategoria == "Todas" || it.categoria == filtroCategoria }
                 .forEach { senhaItem ->
@@ -169,9 +183,122 @@ fun TelaSenhas() {
                             Text("Categoria: ${senhaItem.categoria}", color = Color.Gray)
                             Text("Login: ${senhaItem.login}", color = Color.White)
                             Text("Senha: ${senhaItem.senha}", color = Color.White)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(onClick = { senhaParaEditar = senhaItem }) {
+                                    Text("EDITAR", color = verde)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                TextButton(onClick = { senhaParaExcluir = senhaItem }) {
+                                    Text("EXCLUIR", color = Color.Red)
+                                }
+                            }
                         }
                     }
                 }
+
+            // Filtrei pelo AcessToken para nao ter erro com titulo igual
+            // Popup de edição
+            senhaParaEditar?.let { senha ->
+                var novoTitulo by remember { mutableStateOf(senha.titulo) }
+                var novoLogin by remember { mutableStateOf(senha.login) }
+                var novaSenha by remember { mutableStateOf(senha.senha) }
+
+                AlertDialog(
+                    onDismissRequest = { senhaParaEditar = null },
+                    title = { Text("Editar Senha", color = verde) },
+                    containerColor = Color.Black,
+                    text = {
+                        Column {
+                            OutlinedTextField(
+                                value = novoTitulo,
+                                onValueChange = { novoTitulo = it },
+                                label = { Text("Título", color = Color.White) },
+                                textStyle = TextStyle(color = Color.White)
+                            )
+                            OutlinedTextField(
+                                value = novoLogin,
+                                onValueChange = { novoLogin = it },
+                                label = { Text("Login", color = Color.White) },
+                                textStyle = TextStyle(color = Color.White)
+                            )
+                            OutlinedTextField(
+                                value = novaSenha,
+                                onValueChange = { novaSenha = it },
+                                label = { Text("Senha", color = Color.White) },
+                                textStyle = TextStyle(color = Color.White)
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val docRef = db.collection("usuarios").document(uid!!).collection("senhas")
+                                docRef.whereEqualTo("accessToken", senha.accessToken).get()
+                                    .addOnSuccessListener { query ->
+                                        for (document in query) {
+                                            document.reference.update(
+                                                mapOf(
+                                                    "titulo" to novoTitulo,
+                                                    "login" to novoLogin,
+                                                    "senha" to novaSenha
+                                                )
+                                            )
+                                        }
+                                        listaSenhas.remove(senha)
+                                        listaSenhas.add(senha.copy(titulo = novoTitulo, login = novoLogin, senha = novaSenha))
+                                        senhaParaEditar = null
+                                    }
+                            }
+                        ) {
+                            Text("SALVAR", color = verde)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { senhaParaEditar = null }) {
+                            Text("Cancelar", color = Color.Red)
+                        }
+                    }
+                )
+            }
+
+            // Filtrei pelo AcessToken para nao ter erro com titulo igual
+            // Popup de exclusão
+            senhaParaExcluir?.let { senha ->
+                AlertDialog(
+                    onDismissRequest = { senhaParaExcluir = null },
+                    title = { Text("Confirmação", color = verde) },
+                    containerColor = Color.Black,
+                    text = { Text("TEM CERTEZA QUE DESEJA EXCLUIR ESSE LOGIN?", color = Color.White) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val docRef = db.collection("usuarios").document(uid!!).collection("senhas")
+                                docRef.whereEqualTo("accessToken", senha.accessToken).get()
+                                    .addOnSuccessListener { query ->
+                                        for (document in query) {
+                                            document.reference.delete()
+                                        }
+                                        listaSenhas.remove(senha)
+                                        senhaParaExcluir = null
+                                    }
+                            }
+                        ) {
+                            Text("SIM", color = verde)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { senhaParaExcluir = null }) {
+                            Text("CANCELAR", color = Color.Red)
+                        }
+                    }
+                )
+            }
+
+
         }
         //botao para chamar pop up de adicionar senha
         FloatingActionButton(
