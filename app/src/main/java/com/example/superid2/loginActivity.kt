@@ -68,7 +68,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import com.example.superid2.TermosPopup
 import java.text.Normalizer
+import androidx.core.content.edit
 
+/*
+// DEIXAR AQUI PARA NAO PRECISAR REINSTALAR APP TODA VEZ
 class loginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -213,4 +216,167 @@ fun LoginWithButton(modifier: Modifier = Modifier) {
     }
 
 }
+ */
+
+class loginActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Inicializa o Firebase para a aplicação
+        FirebaseApp.initializeApp(this)
+        enableEdgeToEdge()
+
+        // Acessa o SharedPreferences para verificar se os termos já foram aceitos
+        val sharedPrefs = getSharedPreferences("SuperIDPrefs", Context.MODE_PRIVATE)
+        val jaAceitouTermos = sharedPrefs.getBoolean("aceitou_termos", false)
+
+        setContent {
+            SuperID2Theme {
+                // Define se o popup de termos deve ser exibido com base no SharedPreferences
+                var mostrarPopup by remember { mutableStateOf(!jaAceitouTermos) }
+
+                LoginWithButton(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                        .wrapContentSize(Alignment.Center),
+                    mostrarPopup = mostrarPopup,
+                    aoAceitarTermos = {
+                        // Marca que o usuário aceitou os termos
+                        sharedPrefs.edit() { putBoolean("aceitou_termos", true) }
+                        mostrarPopup = false
+                    },
+                    aoFecharPopup = {
+                        mostrarPopup = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LoginWithButton(
+    modifier: Modifier = Modifier,
+    mostrarPopup: Boolean,
+    aoAceitarTermos: () -> Unit,
+    aoFecharPopup: () -> Unit
+) {
+    val context = LocalContext.current
+    var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    val verde = Color(0xFF1B5E20)
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        // Conteúdo da tela de login
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo do App",
+                modifier = Modifier
+                    .size(350.dp)
+                    .padding(bottom = 10.dp)
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                textStyle = TextStyle(color = Color.White),
+                label = { Text("Email:", color = Color.White) },
+                leadingIcon = { Icon(Icons.Rounded.Email, contentDescription = null) },
+                modifier = Modifier
+                    .background(Color.Black)
+                    .padding(bottom = 16.dp)
+            )
+
+            OutlinedTextField(
+                value = senha,
+                onValueChange = { senha = it },
+                textStyle = TextStyle(color = Color.White),
+                label = { Text("Senha:", color = Color.White) },
+                leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
+                modifier = Modifier
+                    .background(Color.Black)
+                    .padding(bottom = 3.dp)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 3.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = {
+                    // Navega para a tela de recuperação de senha
+                    val intent = Intent(context, ForgotPasswordActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Recuperar senha", color = Color(0xFFB0BEC5))
+                }
+            }
+
+            Button(
+                onClick = {
+                    val emailTrimmed = email.trim()
+                    val senhaTrimmed = senha.trim()
+
+                    if (emailTrimmed.isEmpty() || senhaTrimmed.isEmpty()) {
+                        Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
+                        return@Button // Sai da função para evitar crash caso campos estejam vazios
+                    }
+
+                    Firebase.auth.signInWithEmailAndPassword(emailTrimmed, senhaTrimmed)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                // Login bem-sucedido: vai para a tela inicial
+                                context.startActivity(Intent(context, homeActivity::class.java))
+                                if (context is Activity) context.finish()
+                            } else {
+                                Toast.makeText(context, "Email ou senha incorretos", Toast.LENGTH_SHORT).show()
+                                Log.e("LOGIN", "Erro: ${task.exception?.message}")
+                            }
+                        }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = verde),
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(top = 16.dp)
+            ) {
+                Text(text = "Login")
+            }
+
+            Button(
+                onClick = {
+                    // Navega para a tela de cadastro
+                    val intent = Intent(context, registerActivity::class.java)
+                    context.startActivity(intent)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = verde
+                ),
+                border = BorderStroke(0.8.dp, verde),
+                modifier = Modifier.fillMaxWidth(0.8f)
+            ) {
+                Text("Não tenho conta", color = Color(0xFFE6EEE7))
+            }
+        }
+
+        // Exibe os termos se necessário
+        if (mostrarPopup) {
+            MostrarPopupTermos(
+                mostrarPopup = mostrarPopup,
+                aoFechar = aoFecharPopup,
+                aoAceitar = aoAceitarTermos
+            )
+        }
+    }
+}
+
+
 
