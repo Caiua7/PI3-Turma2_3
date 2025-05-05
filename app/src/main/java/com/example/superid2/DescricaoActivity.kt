@@ -41,7 +41,12 @@ import com.example.superid2.ui.theme.SuperID2Theme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlin.jvm.java
+import androidx.core.content.edit
+
 //Tela de descricao do APP
+
+/*
+// DEIXAR AQUI PARA TESTES, NAO PRECISA DESINSTALAR E INSTALAR TODA VEZ PARA TESTAR DESCRIÇAO.
 class descricaoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +66,44 @@ class descricaoActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+}
+*/
+
+class descricaoActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Verifica se o app foi aberto pela primeira vez
+        val sharedPreferences = getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+        val isFirstLaunch = sharedPreferences.getBoolean("isFirstLaunch", true)
+
+        // Se for a primeira vez, exibe a tela de descrição
+        if (isFirstLaunch) {
+            setContent {
+                SuperID2Theme {
+                    val mostrarDescricao by remember { mutableStateOf(true) }
+
+                    if (mostrarDescricao) {
+                        ExibirCardDescricao(
+                            mostrarDescricao = true,
+                            aoFechar = {
+                                // Salva no SharedPreferences que o app já foi aberto
+                                sharedPreferences.edit() { putBoolean("isFirstLaunch", false) }
+
+                                // Redireciona para a tela de login
+                                startActivity(Intent(this@descricaoActivity, loginActivity::class.java))
+                                finish()
+                            }
+                        )
+                    }
+                }
+            }
+        } else {
+            // Caso já tenha sido aberto antes, redireciona direto para a tela de login
+            startActivity(Intent(this@descricaoActivity, loginActivity::class.java))
+            finish()
         }
     }
 }
