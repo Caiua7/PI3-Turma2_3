@@ -61,7 +61,6 @@ import androidx.compose.foundation.layout.width
 
 
 
-
 // usuário gerencia suas senhas
 class homeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -206,6 +205,10 @@ fun TelaSenhas() {
                 var novoTitulo by remember { mutableStateOf(senha.titulo) }
                 var novoLogin by remember { mutableStateOf(senha.login) }
                 var novaSenha by remember { mutableStateOf(senha.senha) }
+                var novaCategoria by remember { mutableStateOf(senha.categoria) }
+                var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
+
+                val categorias = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
 
                 AlertDialog(
                     onDismissRequest = { senhaParaEditar = null },
@@ -217,19 +220,60 @@ fun TelaSenhas() {
                                 value = novoTitulo,
                                 onValueChange = { novoTitulo = it },
                                 label = { Text("Título", color = Color.White) },
-                                textStyle = TextStyle(color = Color.White)
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier.fillMaxWidth()
                             )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // PERGUNTAR PRO MATEUS COMO COLOCAR BORDA NESSE BOTAO. ERRO DE IMPORTAÇAO
+                            OutlinedTextField(
+                                value = novaCategoria,
+                                onValueChange = {},
+                                label = { Text("Categoria", color = Color.White) },
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { mostrarOpcoesCategoria = !mostrarOpcoesCategoria },
+                                enabled = false,
+                                readOnly = true
+                            )
+
+                            if (mostrarOpcoesCategoria) {
+                                categorias.forEach { categoria ->
+                                    Button(
+                                        onClick = {
+                                            novaCategoria = categoria
+                                            mostrarOpcoesCategoria = false
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                                    ) {
+                                        Text(categoria, color = Color.White)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             OutlinedTextField(
                                 value = novoLogin,
                                 onValueChange = { novoLogin = it },
                                 label = { Text("Login", color = Color.White) },
-                                textStyle = TextStyle(color = Color.White)
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier.fillMaxWidth()
                             )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             OutlinedTextField(
                                 value = novaSenha,
                                 onValueChange = { novaSenha = it },
                                 label = { Text("Senha", color = Color.White) },
-                                textStyle = TextStyle(color = Color.White)
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     },
@@ -244,12 +288,20 @@ fun TelaSenhas() {
                                                 mapOf(
                                                     "titulo" to novoTitulo,
                                                     "login" to novoLogin,
-                                                    "senha" to novaSenha
+                                                    "senha" to novaSenha,
+                                                    "categoria" to novaCategoria
                                                 )
                                             )
                                         }
                                         listaSenhas.remove(senha)
-                                        listaSenhas.add(senha.copy(titulo = novoTitulo, login = novoLogin, senha = novaSenha))
+                                        listaSenhas.add(
+                                            senha.copy(
+                                                titulo = novoTitulo,
+                                                login = novoLogin,
+                                                senha = novaSenha,
+                                                categoria = novaCategoria
+                                            )
+                                        )
                                         senhaParaEditar = null
                                     }
                             }
