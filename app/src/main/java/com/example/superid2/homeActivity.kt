@@ -1,6 +1,6 @@
 package com.example.superid2
+
 import androidx.compose.material3.Icon
-import android.R.style
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,14 +32,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import android.util.Base64
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -50,16 +47,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.security.SecureRandom
 import kotlin.io.encoding.ExperimentalEncodingApi
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.ui.res.painterResource
-import com.example.superid.R
-
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
-
-
-
-
+import kotlin.text.encodeToByteArray
 
 // usuário gerencia suas senhas
 class homeActivity : ComponentActivity() {
@@ -81,6 +72,11 @@ data class Senha( //armazenar senha indvidualmente
     val categoria: String
 )
 
+data class SenhaCriptografada(
+    val senha: String,
+    val iv: String
+)
+
 @Composable
 fun TelaSenhas() {
     val verde = Color(0xFF4CAF50)
@@ -98,6 +94,8 @@ fun TelaSenhas() {
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid
 
+    val cryptoManager = CryptoManager()
+
     //funcao que executa para pegar as senhas ja realizadas antes pelo usuario
     LaunchedEffect(Unit) {
         if (uid != null) {
@@ -111,9 +109,18 @@ fun TelaSenhas() {
                         val titulo = document.getString("titulo") ?: ""
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
+                        val iv = document.getString("iv") ?: ""
+                        val senhaDescriptografada = try {
+                            val ivBytes = Base64.decode(iv, Base64.NO_WRAP)
+                            val encryptedBytes = Base64.decode(senha, Base64.NO_WRAP)
+                            val descriptografia = cryptoManager.decrypt(ivBytes, encryptedBytes)
+                            descriptografia.toString(Charsets.UTF_8)
+                        } catch (e: Exception) {
+                            "Erro ao descriptografar"
+                        }
                         val accessToken = document.getString("accessToken") ?: ""
                         val categoria = document.getString("categoria") ?: "Sites Web"
-                        listaSenhas.add(Senha(titulo, login, senha, accessToken, categoria))
+                        listaSenhas.add(Senha(titulo, login, senhaDescriptografada, accessToken, categoria))
                     }
                 }
                 .addOnFailureListener {
@@ -210,6 +217,11 @@ fun TelaSenhas() {
 
                 val categorias = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
 
+                val bytes = novaSenha.encodeToByteArray()
+                val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
+                val novaSenhaCriptografada = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
+                val novoIv = Base64.encodeToString(iv, Base64.NO_WRAP)
+
                 AlertDialog(
                     onDismissRequest = { senhaParaEditar = null },
                     title = { Text("Editar Senha", color = verde) },
@@ -286,9 +298,10 @@ fun TelaSenhas() {
                                         for (document in query) {
                                             document.reference.update(
                                                 mapOf(
+                                                    "iv" to novoIv,
                                                     "titulo" to novoTitulo,
                                                     "login" to novoLogin,
-                                                    "senha" to novaSenha,
+                                                    "senha" to novaSenhaCriptografada,
                                                     "categoria" to novaCategoria
                                                 )
                                             )
@@ -440,12 +453,18 @@ fun TelaSenhas() {
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
+
                         //salva senha e manda pro bd
                         Button(
                             onClick = {
                                 if (titulo.isNotBlank() && login.isNotBlank() && senha.isNotBlank()) {
+                                    val bytes = senha.encodeToByteArray()
+                                    val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
+                                    val senhaCriptografadaString = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
+                                    val ivString = Base64.encodeToString(iv, Base64.NO_WRAP)
                                     val novoToken = gerarAccessToken()
                                     val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria)
+                                    val novaSenhaCriptografada = SenhaCriptografada(senhaCriptografadaString, ivString)
                                     listaSenhas.add(novaSenha)
 
                                     if (uid != null) {
@@ -456,7 +475,8 @@ fun TelaSenhas() {
                                                 hashMapOf(
                                                     "titulo" to novaSenha.titulo,
                                                     "login" to novaSenha.login,
-                                                    "senha" to novaSenha.senha,
+                                                    "senha" to novaSenhaCriptografada.senha,
+                                                    "iv" to novaSenhaCriptografada.iv,
                                                     "accessToken" to novaSenha.accessToken,
                                                     "categoria" to novaSenha.categoria
                                                 )
