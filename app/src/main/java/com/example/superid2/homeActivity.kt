@@ -86,13 +86,17 @@ fun TelaSenhas() {
     val listaSenhas = remember { mutableStateListOf<Senha>() }
     val context = LocalContext.current
     var selectedCategoria by remember { mutableStateOf("Sites Web") }
-    val categorias = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+    var categorias = remember { mutableStateListOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico") }
     var filtroCategoria by remember { mutableStateOf("Todas") }
     var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid
+    var showAdicionarCategoria by remember { mutableStateOf(false) }
+    var novaCategoriaTexto by remember { mutableStateOf("") }
+
+
 
     val cryptoManager = CryptoManager()
 
@@ -143,15 +147,65 @@ fun TelaSenhas() {
 
             var mostrarFiltro by remember { mutableStateOf(false) }
 
+
             //botao para mostar o filtro
-            TextButton(onClick = { mostrarFiltro = !mostrarFiltro }) {
-                Text("Filtrar por categoria", color = Color.White)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { mostrarFiltro = !mostrarFiltro }) {
+                    Text("Filtrar por categoria", color = Color.White)
+                }
+
+
+                TextButton(onClick = {
+                    showAdicionarCategoria = true
+                }) {
+                    Text("+ Adicionar Categoria", color = Color.White)
+                }
             }
+            if (showAdicionarCategoria) {
+                AlertDialog(
+                    onDismissRequest = { showAdicionarCategoria = false },
+                    title = { Text("Nova Categoria", color = verde) },
+                    containerColor = Color.Black,
+                    text = {
+                        OutlinedTextField(
+                            value = novaCategoriaTexto,
+                            onValueChange = { novaCategoriaTexto = it },
+                            label = { Text("Nome da Categoria", color = Color.White) },
+                            textStyle = TextStyle(color = Color.White),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            val novaCategoria = novaCategoriaTexto.trim()
+                            if (novaCategoria.isNotEmpty() && novaCategoria !in categorias) {
+                                categorias.add(novaCategoria)
+                            }
+                            novaCategoriaTexto = ""
+                            showAdicionarCategoria = false
+                        }) {
+                            Text("Adicionar", color = verde)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            novaCategoriaTexto = ""
+                            showAdicionarCategoria = false
+                        }) {
+                            Text("Cancelar", color = Color.Red)
+                        }
+                    }
+                )
+            }
+
 
             if (mostrarFiltro) {
 
-                val opcoesFiltro =
-                    listOf("Todas", "Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+                val opcoesFiltro = listOf("Todas") + categorias
                 opcoesFiltro.forEach { opcao ->
                     Button(
                         onClick = { filtroCategoria = opcao },
@@ -214,8 +268,6 @@ fun TelaSenhas() {
                 var novaSenha by remember { mutableStateOf(senha.senha) }
                 var novaCategoria by remember { mutableStateOf(senha.categoria) }
                 var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
-
-                val categorias = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
 
                 val bytes = novaSenha.encodeToByteArray()
                 val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
