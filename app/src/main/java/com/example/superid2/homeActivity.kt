@@ -71,7 +71,8 @@ data class Senha( //armazenar senha indvidualmente
     val login: String,
     val senha: String,
     val accessToken: String,
-    val categoria: String
+    val categoria: String,
+    val descricao: String = ""
 )
 
 data class SenhaCriptografada(
@@ -97,6 +98,8 @@ fun TelaSenhas() {
     val uid = auth.currentUser?.uid
     var showAdicionarCategoria by remember { mutableStateOf(false) }
     var novaCategoriaTexto by remember { mutableStateOf("") }
+    var descricao by remember { mutableStateOf("") }
+
 
 
 
@@ -113,6 +116,7 @@ fun TelaSenhas() {
                     listaSenhas.clear()
                     for (document in result) {
                         val titulo = document.getString("titulo") ?: ""
+                        val descricao = document.getString("descricao") ?: ""
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
                         val iv = document.getString("iv") ?: ""
@@ -243,6 +247,7 @@ fun TelaSenhas() {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text("🔐 ${senhaItem.titulo}", color = verde)
                             Text("Categoria: ${senhaItem.categoria}", color = Color.Gray)
+                            Text("Descrição: ${senhaItem.descricao}", color = Color.Gray)
                             Text("Login: ${senhaItem.login}", color = Color.White)
                             Text("Senha: ${senhaItem.senha}", color = Color.White)
 
@@ -453,9 +458,9 @@ fun TelaSenhas() {
                 containerColor = Color.Black,
                 onDismissRequest = {},
                 confirmButton = {},
-                dismissButton = { //fechar o pop up
+                dismissButton = {
                     TextButton(onClick = { showDialog = false }) {
-                        Text("Cancelar",color = Color.Red)
+                        Text("Cancelar", color = Color.Red)
                     }
                 },
                 title = {
@@ -466,13 +471,23 @@ fun TelaSenhas() {
                         OutlinedTextField(
                             value = titulo,
                             onValueChange = { titulo = it },
-                            label = { Text("Título", color = Color.White) },
+                            label = { Text("Título (opcional)", color = Color.White) },
                             textStyle = TextStyle(color = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        //exibir opcoes de categoria
+
+                        OutlinedTextField(
+                            value = descricao,
+                            onValueChange = { descricao = it },
+                            label = { Text("Descrição (opcional)", color = Color.White) },
+                            textStyle = TextStyle(color = Color.White),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         OutlinedTextField(
                             value = selectedCategoria,
                             onValueChange = {},
@@ -505,7 +520,7 @@ fun TelaSenhas() {
                         OutlinedTextField(
                             value = login,
                             onValueChange = { login = it },
-                            label = { Text("Login", color = Color.White) },
+                            label = { Text("Login (opcional)", color = Color.White) },
                             textStyle = TextStyle(color = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -522,16 +537,15 @@ fun TelaSenhas() {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        //salva senha e manda pro bd
                         Button(
                             onClick = {
-                                if (titulo.isNotBlank() && login.isNotBlank() && senha.isNotBlank()) {
+                                if (senha.isNotBlank() && selectedCategoria.isNotBlank()) {
                                     val bytes = senha.encodeToByteArray()
                                     val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
                                     val senhaCriptografadaString = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
                                     val ivString = Base64.encodeToString(iv, Base64.NO_WRAP)
                                     val novoToken = gerarAccessToken()
-                                    val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria)
+                                    val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria, descricao) // se você tiver esse campo na classe
                                     val novaSenhaCriptografada = SenhaCriptografada(senhaCriptografadaString, ivString)
                                     listaSenhas.add(novaSenha)
 
@@ -541,12 +555,13 @@ fun TelaSenhas() {
                                             .collection("senhas")
                                             .add(
                                                 hashMapOf(
-                                                    "titulo" to novaSenha.titulo,
-                                                    "login" to novaSenha.login,
+                                                    "titulo" to titulo,
+                                                    "descricao" to descricao,
+                                                    "login" to login,
                                                     "senha" to novaSenhaCriptografada.senha,
                                                     "iv" to novaSenhaCriptografada.iv,
-                                                    "accessToken" to novaSenha.accessToken,
-                                                    "categoria" to novaSenha.categoria
+                                                    "accessToken" to novoToken,
+                                                    "categoria" to selectedCategoria
                                                 )
                                             )
                                             .addOnSuccessListener {
@@ -556,10 +571,13 @@ fun TelaSenhas() {
                                                 Toast.makeText(context, "Erro!", Toast.LENGTH_SHORT).show()
                                             }
                                     }
-                                    //Limpa campos!
+
+                                    // Limpa campos
                                     titulo = ""
+                                    descricao = ""
                                     login = ""
                                     senha = ""
+                                    selectedCategoria = ""
                                     showDialog = false
                                 }
                             },
@@ -572,6 +590,7 @@ fun TelaSenhas() {
                 }
             )
         }
+
     }
 }
 //gerar token aleatorio de acesso
