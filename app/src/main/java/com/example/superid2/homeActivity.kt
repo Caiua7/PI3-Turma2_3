@@ -50,6 +50,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import kotlin.text.encodeToByteArray
 
 // usuário gerencia suas senhas
@@ -428,6 +430,20 @@ fun TelaSenhas() {
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = "Adicionar nova senha",
+                tint = Color.White
+            )
+        }
+        // Floating Action Button com ícone de QR Code no canto inferior esquerdo
+        FloatingActionButton(
+            onClick = {  },
+            containerColor = verde,
+            modifier = Modifier
+                .align(Alignment.BottomStart) // Posiciona no canto inferior esquerdo
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.PlayArrow, // Ícone de QR Code
+                contentDescription = "Gerar QR Code",
                 tint = Color.White
             )
         }
