@@ -363,7 +363,7 @@ fun LoginWithButton(
                 border = BorderStroke(0.8.dp, verde),
                 modifier = Modifier.fillMaxWidth(0.8f)
             ) {
-                Text("Não tenho conta", color = Color(0xFFE6EEE7))
+                Text("Criar conta", color = Color(0xFFE6EEE7))
             }
         }
 
