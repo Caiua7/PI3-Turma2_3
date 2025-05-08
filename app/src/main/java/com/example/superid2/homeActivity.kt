@@ -89,7 +89,7 @@ fun TelaSenhas() {
     val listaSenhas = remember { mutableStateListOf<Senha>() }
     val context = LocalContext.current
     var selectedCategoria by remember { mutableStateOf("Sites Web") }
-    var categorias = remember { mutableStateListOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico") }
+    val categorias = remember { mutableStateListOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico") }
     var filtroCategoria by remember { mutableStateOf("Todas") }
     var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
@@ -100,14 +100,11 @@ fun TelaSenhas() {
     var novaCategoriaTexto by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
 
-
-
-
     val cryptoManager = CryptoManager()
 
-    //funcao que executa para pegar as senhas ja realizadas antes pelo usuario
     LaunchedEffect(Unit) {
         if (uid != null) {
+            // Carregar senhas
             db.collection("usuarios")
                 .document(uid)
                 .collection("senhas")
@@ -116,7 +113,6 @@ fun TelaSenhas() {
                     listaSenhas.clear()
                     for (document in result) {
                         val titulo = document.getString("titulo") ?: ""
-                        val descricao = document.getString("descricao") ?: ""
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
                         val iv = document.getString("iv") ?: ""
@@ -136,8 +132,35 @@ fun TelaSenhas() {
                 .addOnFailureListener {
                     Toast.makeText(context, "Erro ao carregar senhas", Toast.LENGTH_SHORT).show()
                 }
+
+            val categoriasFixas = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+
+            db.collection("usuarios")
+                .document(uid)
+                .collection("categorias")
+                .get()
+                .addOnSuccessListener { result ->
+                    val categoriasFirebase = mutableSetOf<String>()
+
+                    for (document in result) {
+                        val nome = document.getString("nome")
+                        if (!nome.isNullOrEmpty()) {
+                            categoriasFirebase.add(nome)
+                        }
+                    }
+
+                    val todasCategorias = (categoriasFixas + categoriasFirebase).toSet()
+                    categorias.clear()
+                    categorias.addAll(todasCategorias)
+                }
+                .addOnFailureListener {
+                    Toast.makeText(context, "Erro ao carregar categorias", Toast.LENGTH_SHORT).show()
+                    categorias.clear()
+                    categorias.addAll(categoriasFixas)
+                }
         }
     }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -186,22 +209,41 @@ fun TelaSenhas() {
                         )
                     },
                     confirmButton = {
-                        TextButton(onClick = {
-                            val novaCategoria = novaCategoriaTexto.trim()
-                            if (novaCategoria.isNotEmpty() && novaCategoria !in categorias) {
-                                categorias.add(novaCategoria)
+                        TextButton(
+                            onClick = {
+                                val novaCategoria = novaCategoriaTexto.trim()
+
+                                if (novaCategoria.isNotEmpty() && novaCategoria !in categorias && uid != null) {
+                                    categorias.add(novaCategoria)
+
+                                    val categoriaData = hashMapOf("nome" to novaCategoria)
+
+                                    db.collection("usuarios")
+                                        .document(uid)
+                                        .collection("categorias")
+                                        .add(categoriaData)
+                                        .addOnSuccessListener {
+                                            println("Categoria salva no Firebase.")
+                                        }
+                                        .addOnFailureListener { e ->
+                                            println("Erro ao salvar categoria: ${e.message}")
+                                        }
+                                }
+
+                                novaCategoriaTexto = ""
+                                showAdicionarCategoria = false
                             }
-                            novaCategoriaTexto = ""
-                            showAdicionarCategoria = false
-                        }) {
+                        ) {
                             Text("Adicionar", color = verde)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = {
-                            novaCategoriaTexto = ""
-                            showAdicionarCategoria = false
-                        }) {
+                        TextButton(
+                            onClick = {
+                                novaCategoriaTexto = ""
+                                showAdicionarCategoria = false
+                            }
+                        ) {
                             Text("Cancelar", color = Color.Red)
                         }
                     }
@@ -209,7 +251,8 @@ fun TelaSenhas() {
             }
 
 
-            if (mostrarFiltro) {
+
+                if (mostrarFiltro) {
 
                 val opcoesFiltro = listOf("Todas") + categorias
                 opcoesFiltro.forEach { opcao ->
