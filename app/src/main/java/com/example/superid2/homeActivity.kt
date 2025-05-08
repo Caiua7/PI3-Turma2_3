@@ -290,7 +290,6 @@ fun TelaSenhas() {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text("🔐 ${senhaItem.titulo}", color = verde)
                             Text("Categoria: ${senhaItem.categoria}", color = Color.Gray)
-                            Text("Descrição: ${senhaItem.descricao}", color = Color.Gray)
                             Text("Login: ${senhaItem.login}", color = Color.White)
                             Text("Senha: ${senhaItem.senha}", color = Color.White)
 
