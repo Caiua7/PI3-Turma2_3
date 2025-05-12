@@ -49,9 +49,22 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Divider
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import kotlin.text.encodeToByteArray
 
 // usuário gerencia suas senhas
@@ -99,8 +112,11 @@ fun TelaSenhas() {
     var showAdicionarCategoria by remember { mutableStateOf(false) }
     var novaCategoriaTexto by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
-
+    var mostrarExcluirCategoria by remember { mutableStateOf(false) }
     val cryptoManager = CryptoManager()
+    val categoriasFixas = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+
+
 
     LaunchedEffect(Unit) {
         if (uid != null) {
@@ -132,8 +148,6 @@ fun TelaSenhas() {
                 .addOnFailureListener {
                     Toast.makeText(context, "Erro ao carregar senhas", Toast.LENGTH_SHORT).show()
                 }
-
-            val categoriasFixas = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
 
             db.collection("usuarios")
                 .document(uid)
@@ -171,7 +185,38 @@ fun TelaSenhas() {
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Senhas Salvas", color = verde, style = MaterialTheme.typography.headlineSmall)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Ícone de Senha",
+                        tint = verde,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Senhas Salvas",
+                        color = verde,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Divider(
+                    color = verde.copy(alpha = 0.4f),
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(end = 64.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
 
             var mostrarFiltro by remember { mutableStateOf(false) }
@@ -179,21 +224,72 @@ fun TelaSenhas() {
 
             //botao para mostar o filtro
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { mostrarFiltro = !mostrarFiltro }) {
-                    Text("Filtrar por categoria", color = Color.White)
+                val buttonShape = RoundedCornerShape(12.dp)
+
+                TextButton(
+                    onClick = { mostrarFiltro = !mostrarFiltro },
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .height(36.dp)
+                        .clip(buttonShape)
+                        .background(Color(0xFF2A2A2A)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.List,
+                        contentDescription = "Filtrar",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Filtrar", color = Color.White, fontSize = 12.sp)
                 }
 
+                TextButton(
+                    onClick = { mostrarExcluirCategoria = !mostrarExcluirCategoria },
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .height(36.dp)
+                        .clip(buttonShape)
+                        .background(Color(0xFF2A2A2A)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Remover Categoria",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Categoria", color = Color.White, fontSize = 12.sp)
+                }
 
-                TextButton(onClick = {
-                    showAdicionarCategoria = true
-                }) {
-                    Text("+ Adicionar Categoria", color = Color.White)
+                TextButton(
+                    onClick = { showAdicionarCategoria = true },
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .height(36.dp)
+                        .clip(buttonShape)
+                        .background(Color(0xFF2A2A2A)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Adicionar Categoria",
+                        tint = verde,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Categoria", color = verde, fontSize = 12.sp)
                 }
             }
+
             if (showAdicionarCategoria) {
                 AlertDialog(
                     onDismissRequest = { showAdicionarCategoria = false },
@@ -250,6 +346,77 @@ fun TelaSenhas() {
                 )
             }
 
+            if (mostrarExcluirCategoria) {
+                val categoriasRemoviveis = categorias.filterNot { it in categoriasFixas }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(Color.Black)
+                ) {
+                    if (categoriasRemoviveis.isEmpty()) {
+                        Text(
+                            "Nenhuma categoria personalizada",
+                            color = Color.Gray,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    } else {
+                        categoriasRemoviveis.forEach { categoria ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            // Remove localmente
+                                            categorias.remove(categoria)
+
+                                            // Remove do Firebase
+                                            db.collection("usuarios")
+                                                .document(uid ?: "")
+                                                .collection("categorias")
+                                                .whereEqualTo("nome", categoria)
+                                                .get()
+                                                .addOnSuccessListener { result ->
+                                                    for (document in result) {
+                                                        db.collection("usuarios")
+                                                            .document(uid ?: "")
+                                                            .collection("categorias")
+                                                            .document(document.id)
+                                                            .delete()
+                                                    }
+                                                }
+
+                                            mostrarExcluirCategoria = false
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = categoria,
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Remover categoria",
+                                        tint = Color.Red
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
 
 
                 if (mostrarFiltro) {
@@ -284,30 +451,80 @@ fun TelaSenhas() {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
+                            .padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("🔐 ${senhaItem.titulo}", color = verde)
-                            Text("Categoria: ${senhaItem.categoria}", color = Color.Gray)
-                            Text("Login: ${senhaItem.login}", color = Color.White)
-                            Text("Senha: ${senhaItem.senha}", color = Color.White)
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🔐 ${senhaItem.titulo}",
+                                color = verde,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Descricao: ${senhaItem.descricao}",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Categoria: ${senhaItem.categoria}",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Login: ${senhaItem.login}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Senha: ${senhaItem.senha}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Senha: ${senhaItem.senha}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 TextButton(onClick = { senhaParaEditar = senhaItem }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Editar",
+                                        tint = verde,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text("EDITAR", color = verde)
                                 }
+
                                 Spacer(modifier = Modifier.width(8.dp))
+
                                 TextButton(onClick = { senhaParaExcluir = senhaItem }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Excluir",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text("EXCLUIR", color = Color.Red)
                                 }
                             }
                         }
                     }
                 }
+
 
             // Filtrei pelo AcessToken para nao ter erro com titulo igual
             // Popup de edição
