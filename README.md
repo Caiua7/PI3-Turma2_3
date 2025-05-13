@@ -1,4 +1,3 @@
--  mainrafa
 # Projeto Integrador - 3° Semestre  
 **Curso:** Engenharia de Software  
 **Instituição:** PUC-Campinas  
@@ -47,4 +46,4 @@ Grupo:
 - [João Pedro Zangerolamo de Freitas](https://github.com/joaopzf); - Desenvolvimento Criptografia
 - [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05);
 
-  main
+  
