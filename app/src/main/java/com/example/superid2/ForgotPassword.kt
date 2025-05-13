@@ -47,6 +47,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import kotlin.jvm.java
 
+/*
 class ForgotPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,6 +150,134 @@ fun PasswordWithButton(modifier: Modifier = Modifier) {
                     } else {
                         Toast.makeText(context, "Email incorreto..", Toast.LENGTH_SHORT).show()
                     }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+            ) {
+                Text("Redefinir Senha", color = Color.White)
+            }
+        }
+    }
+}
+ */
+
+class ForgotPasswordActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+        enableEdgeToEdge()
+        setContent {
+            SuperID2Theme {
+                PasswordApp()
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PasswordApp() {
+    PasswordWithButton(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .wrapContentSize(Alignment.Center)
+    )
+}
+
+
+@Composable
+fun PasswordWithButton(modifier: Modifier = Modifier) {
+    var email by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        // Botão de voltar no canto superior esquerdo
+        IconButton(
+            onClick = {
+                if (context is Activity) {
+                    context.finish()
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(12.dp)
+                .size(48.dp) // Definindo um tamanho fixo para o botão
+        ) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = "Voltar",
+                tint = Color.White,
+                modifier = Modifier.size(24.dp) // Tamanho do ícone
+            )
+        }
+
+        // Formulário (Campos de entrada e botão)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .align(Alignment.Center), // Centralizando o conteúdo
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(300.dp)
+                    .padding(bottom = 10.dp)
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email", color = Color.White) },
+                leadingIcon = { Icon(Icons.Rounded.Email, contentDescription = null) },
+                textStyle = TextStyle(color = Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+            )
+
+            Button(
+                onClick = {
+                    val auth = FirebaseAuth.getInstance()
+                    val trimmedEmail = email.trim()
+
+                    if (trimmedEmail.isNotEmpty()) {
+                        auth.fetchSignInMethodsForEmail(trimmedEmail)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val methods = task.result?.signInMethods
+                                    if (!methods.isNullOrEmpty() && methods.contains("password")) {
+                                        // OK: usuário existe e foi criado com email/senha
+                                        auth.sendPasswordResetEmail(trimmedEmail)
+                                            .addOnCompleteListener { resetTask ->
+                                                if (resetTask.isSuccessful) {
+                                                    Toast.makeText(context, "E-mail de redefinição enviado.", Toast.LENGTH_SHORT).show()
+                                                    if (context is Activity) context.finish()
+                                                } else {
+                                                    Toast.makeText(context, "Erro ao enviar e-mail.", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                    } else {
+                                        Toast.makeText(context, "Este e-mail não tem login com senha.", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Erro ao verificar e-mail.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    } else {
+                        Toast.makeText(context, "Digite um e-mail válido.", Toast.LENGTH_SHORT).show()
+                    }
+
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()
