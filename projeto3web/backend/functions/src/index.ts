@@ -3,10 +3,10 @@ import * as admin from "firebase-admin";
 import * as qr from "qrcode";
 import * as crypto from "crypto";
 
-// Inicializa o Firebase Admin
+// inicializa o Firebase Admin
 admin.initializeApp();
 
-// Função performAuth
+// função performAuth
 export const performAuth = functions.https.
   onRequest({region: "southamerica-east1"}, async (request, response) => {
     try {
@@ -23,17 +23,23 @@ export const performAuth = functions.https.
       console.log("Recebido:", {apiKey, url});
 
       // verifica apikey na coleção partners
-      const partnerDoc = await admin.firestore().
-        collection("partners").doc(apiKey).get();
+      const partnersSnapshot = await admin.firestore()
+        .collection("partners")
+        .where("apiKey", "==", apiKey)
+        .get();
 
-      if (!partnerDoc.exists) {
+      if (partnersSnapshot.empty) {
         console.error("API Key inválida:", apiKey);
         response.status(400).json({error: "API Key inválida"});
         return;
       }
 
+      const partnerDoc = partnersSnapshot.docs[0].data();
+      console.log("Parceiro encontrado:", partnerDoc);
+
+
       // geração loginToken
-      const loginToken = crypto.randomBytes(32).toString("hex");
+      const loginToken = crypto.randomBytes(128).toString("hex");
       console.log("Token gerado:", loginToken);
 
       // geração qrcode
@@ -49,7 +55,6 @@ export const performAuth = functions.https.
 
       // retorta loginToken e qrcode
       response.status(200).json({
-        loginToken,
         qrcodeBase64: qrCodeBase64,
       });
     } catch (error) {
