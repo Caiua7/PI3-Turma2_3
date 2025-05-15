@@ -70,163 +70,17 @@ import com.example.superid2.TermosPopup
 import java.text.Normalizer
 import androidx.core.content.edit
 
-/*
-// DEIXAR AQUI PARA NAO PRECISAR REINSTALAR APP TODA VEZ
-class loginActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this)
-        enableEdgeToEdge()
-        setContent {
-            SuperID2Theme {
-                LoginApp()
-            }
-        }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun LoginApp() {
-    LoginWithButton(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .wrapContentSize(Alignment.Center)
-    )
-}
-
-
-@Composable
-fun LoginWithButton(modifier: Modifier = Modifier) {
-    var mostrarPopup by remember { mutableStateOf(true) }
-    val context = LocalContext.current
-    var email by remember { mutableStateOf("") }
-    var senha by remember { mutableStateOf("") }
-
-    val verde = Color(0xFF1B5E20)
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
-    ) {
-
-        // Conteúdo da tela de login
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo do App",
-                modifier = Modifier
-                    .size(350.dp)
-                    .padding(bottom = 10.dp)
-            )
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                textStyle = TextStyle(color = Color.White),
-                label = { Text("Email:", color = Color.White) },
-                leadingIcon = { Icon(Icons.Rounded.Email, contentDescription = null) },
-                modifier = Modifier
-                    .background(Color.Black)
-                    .padding(bottom = 16.dp)
-            )
-
-            OutlinedTextField(
-                value = senha,
-                onValueChange = { senha = it },
-                textStyle = TextStyle(color = Color.White),
-                label = { Text("Senha:", color = Color.White) },
-                leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-                modifier = Modifier
-                    .background(Color.Black)
-                    .padding(bottom = 3.dp)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(bottom=3.dp),
-                horizontalArrangement = Arrangement.End
-
-            ) {
-                TextButton(onClick = {
-                    val intent = Intent(context, ForgotPasswordActivity::class.java)
-                    context.startActivity(intent)
-                }) {
-                    Text("Recuperar senha", color = Color(0xFFB0BEC5))
-                }
-            }
-
-            Button(
-                onClick = {
-                    val emailTrimmed = email.trim()
-                    val senhaTrimmed = senha.trim()
-                    if (emailTrimmed.isEmpty() || senhaTrimmed.isEmpty()) {
-                        Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
-                        return@Button //como estava crashando, ele sai da funcao evitando o resto do codigo(o que tem embaixo)
-                    }
-
-                    Firebase.auth.signInWithEmailAndPassword(emailTrimmed, senhaTrimmed)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                // Login ok! Vai pra próxima tela
-                                context.startActivity(Intent(context, homeActivity::class.java))
-                                if (context is Activity) context.finish()
-                            } else {
-                                Toast.makeText(context, "Email ou senha incorretos", Toast.LENGTH_SHORT).show()
-                                Log.e("LOGIN", "Erro: ${task.exception?.message}")
-                            }
-                        }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = verde),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .padding(top = 16.dp)
-            ) {
-                Text(text = "Login")
-            }
-
-            Button(
-                onClick = {
-                    val intent = Intent(context, registerActivity::class.java)
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = verde
-                ),
-                border = BorderStroke(0.8.dp, verde),
-                modifier = Modifier.fillMaxWidth(0.8f)
-            ) {
-                Text("Não tenho conta", color = Color(0xFFE6EEE7))
-            }
-        }
-
-        // Exibe o pop-up em cima de tudo assim que a tela carrega
-        if (mostrarPopup) {
-            MostrarPopupTermos(
-                mostrarPopup = mostrarPopup,
-                aoFechar = { mostrarPopup = false },
-                aoAceitar = { mostrarPopup = false }
-            )
-        }
-    }
-
-}
- */
 
 class loginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicializa o Firebase para a aplicação
+        // Inicializa o Firebase
         FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
 
-        // Acessa o SharedPreferences para verificar se os termos já foram aceitos
+        // SharedPrferences para ver se os termos ja foram aceitos
         val sharedPrefs = getSharedPreferences("SuperIDPrefs", Context.MODE_PRIVATE)
         val jaAceitouTermos = sharedPrefs.getBoolean("aceitou_termos", false)
 
@@ -234,7 +88,7 @@ class loginActivity : ComponentActivity() {
             SuperID2Theme {
                 // Define se o popup de termos deve ser exibido com base no SharedPreferences
                 var mostrarPopup by remember { mutableStateOf(!jaAceitouTermos) }
-
+                //chama a composable de login
                 LoginWithButton(
                     modifier = Modifier
                         .fillMaxSize()
@@ -259,8 +113,8 @@ class loginActivity : ComponentActivity() {
 fun LoginWithButton(
     modifier: Modifier = Modifier,
     mostrarPopup: Boolean,
-    aoAceitarTermos: () -> Unit,
-    aoFecharPopup: () -> Unit
+    aoAceitarTermos: () -> Unit, //acao de aceitar pop up
+    aoFecharPopup: () -> Unit //acao de fechar pop up
 ) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
@@ -304,7 +158,7 @@ fun LoginWithButton(
                     .background(Color.Black)
                     .padding(bottom = 3.dp)
             )
-
+                //botao recuperar senha
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -324,19 +178,20 @@ fun LoginWithButton(
                 onClick = {
                     val emailTrimmed = email.trim()
                     val senhaTrimmed = senha.trim()
-
+                    //valida campos antes de logar
                     if (emailTrimmed.isEmpty() || senhaTrimmed.isEmpty()) {
                         Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
                         return@Button // Sai da função para evitar crash caso campos estejam vazios
                     }
-
+                    //tenta logar utilizando firebase auth
                     Firebase.auth.signInWithEmailAndPassword(emailTrimmed, senhaTrimmed)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                // Login bem-sucedido: vai para a tela inicial
+                                // Login correto, vai para a tela inicial
                                 context.startActivity(Intent(context, homeActivity::class.java))
                                 if (context is Activity) context.finish()
                             } else {
+                                //caso de erro, exibe uma mensagem
                                 Toast.makeText(context, "Email ou senha incorretos", Toast.LENGTH_SHORT).show()
                                 Log.e("LOGIN", "Erro: ${task.exception?.message}")
                             }
@@ -349,7 +204,7 @@ fun LoginWithButton(
             ) {
                 Text(text = "Login")
             }
-
+            //botao para criar conta
             Button(
                 onClick = {
                     // Navega para a tela de cadastro
@@ -367,7 +222,7 @@ fun LoginWithButton(
             }
         }
 
-        // Exibe os termos se necessário
+        // Exibe os termos se o usuario nao aceitou
         if (mostrarPopup) {
             MostrarPopupTermos(
                 mostrarPopup = mostrarPopup,

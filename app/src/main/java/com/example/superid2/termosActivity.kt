@@ -76,7 +76,7 @@ fun TermosPopup(
     **Clique em "Aceitar" para começar o cadastro!**
 """.trimIndent()
 
-    var checkAceito by remember { mutableStateOf(false) } //controla a checkbox
+    var checkAceito by remember { mutableStateOf(false) } //checkbox
     //Criar pop-up
     Dialog(onDismissRequest ={ /* ao clicar fora nao acontece nada */}) {
         Surface(
