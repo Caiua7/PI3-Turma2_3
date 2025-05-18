@@ -30,8 +30,10 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import androidx.compose.material.icons.filled.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.superid.R
 import kotlin.text.encodeToByteArray
 
 // --------------------------- ACTIVITY PRINCIPAL ----------------------------
@@ -628,16 +630,17 @@ fun TelaSenhas() {
         }
         // -------------- BOTÃO QR CODE (FAB) -------------------
         FloatingActionButton(
-            onClick = {  },
+            onClick = { /* sua ação */ },
             containerColor = verde,
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Filled.PlayArrow,
+                painter = painterResource(id = R.drawable.qrcode), // coloque o arquivo na pasta drawable
                 contentDescription = "Gerar QR Code",
-                tint = Color.White
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
             )
         }
         // --------------- ALERT DE NOVA SENHA ------------------
