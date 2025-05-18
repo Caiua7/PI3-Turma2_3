@@ -1,31 +1,17 @@
 package com.example.superid2
 
+// ------------------------------- IMPORTS ----------------------------------
+
 import androidx.compose.material3.Icon
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -33,12 +19,7 @@ import androidx.compose.ui.unit.dp
 import android.util.Base64
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import com.example.superid2.ui.theme.SuperID2Theme
@@ -46,15 +27,15 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.security.SecureRandom
 import kotlin.io.encoding.ExperimentalEncodingApi
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import kotlin.text.encodeToByteArray
 
-// usuário gerencia suas senhas
+// --------------------------- ACTIVITY PRINCIPAL ----------------------------
+
 class homeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +47,9 @@ class homeActivity : ComponentActivity() {
     }
 }
 
-data class Senha( //armazenar senha indvidualmente
+// -------------------------- DATA CLASSES -----------------------------------
+
+data class Senha(
     val titulo: String,
     val login: String,
     val senha: String,
@@ -80,8 +63,11 @@ data class SenhaCriptografada(
     val iv: String
 )
 
+// -------------------------- TELA PRINCIPAL ---------------------------------
+
 @Composable
 fun TelaSenhas() {
+    // ----------- VARIÁVEIS DE ESTADO -----------
     val verde = Color(0xFF4CAF50)
     var titulo by remember { mutableStateOf("") }
     var login by remember { mutableStateOf("") }
@@ -99,9 +85,11 @@ fun TelaSenhas() {
     var showAdicionarCategoria by remember { mutableStateOf(false) }
     var novaCategoriaTexto by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
-
+    var mostrarExcluirCategoria by remember { mutableStateOf(false) }
     val cryptoManager = CryptoManager()
+    val categoriasFixas = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
 
+    // ------------------ Carregamento Inicial ------------------
     LaunchedEffect(Unit) {
         if (uid != null) {
             // Carregar senhas
@@ -133,22 +121,19 @@ fun TelaSenhas() {
                     Toast.makeText(context, "Erro ao carregar senhas", Toast.LENGTH_SHORT).show()
                 }
 
-            val categoriasFixas = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
-
+            // Carregar categorias
             db.collection("usuarios")
                 .document(uid)
                 .collection("categorias")
                 .get()
                 .addOnSuccessListener { result ->
                     val categoriasFirebase = mutableSetOf<String>()
-
                     for (document in result) {
                         val nome = document.getString("nome")
                         if (!nome.isNullOrEmpty()) {
                             categoriasFirebase.add(nome)
                         }
                     }
-
                     val todasCategorias = (categoriasFixas + categoriasFirebase).toSet()
                     categorias.clear()
                     categorias.addAll(todasCategorias)
@@ -161,6 +146,7 @@ fun TelaSenhas() {
         }
     }
 
+    // -------------------------- UI PRINCIPAL -------------------------------
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -170,30 +156,107 @@ fun TelaSenhas() {
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // ----------------- TÍTULO BONITO DA PÁGINA ------------------
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Senhas Salvas", color = verde, style = MaterialTheme.typography.headlineSmall)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Ícone de Senha",
+                        tint = verde,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Senhas Salvas",
+                        color = verde,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Divider(
+                    color = verde.copy(alpha = 0.4f),
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(end = 64.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ------------------- BOTÕES DE AÇÃO EM LINHA --------------------
             var mostrarFiltro by remember { mutableStateOf(false) }
-
-
-            //botao para mostar o filtro
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { mostrarFiltro = !mostrarFiltro }) {
-                    Text("Filtrar por categoria", color = Color.White)
+                val buttonShape = RoundedCornerShape(12.dp)
+                TextButton(
+                    onClick = { mostrarFiltro = !mostrarFiltro },
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .height(36.dp)
+                        .clip(buttonShape)
+                        .background(Color(0xFF2A2A2A)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.List,
+                        contentDescription = "Filtrar",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Filtrar", color = Color.White, fontSize = 12.sp)
                 }
-
-
-                TextButton(onClick = {
-                    showAdicionarCategoria = true
-                }) {
-                    Text("+ Adicionar Categoria", color = Color.White)
+                TextButton(
+                    onClick = { mostrarExcluirCategoria = !mostrarExcluirCategoria },
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .height(36.dp)
+                        .clip(buttonShape)
+                        .background(Color(0xFF2A2A2A)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Remover Categoria",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Categoria", color = Color.White, fontSize = 12.sp)
+                }
+                TextButton(
+                    onClick = { showAdicionarCategoria = true },
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .height(36.dp)
+                        .clip(buttonShape)
+                        .background(Color(0xFF2A2A2A)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Adicionar Categoria",
+                        tint = verde,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Categoria", color = verde, fontSize = 12.sp)
                 }
             }
+
+            // ------------------- DIALOGS DE CATEGORIA ---------------------
             if (showAdicionarCategoria) {
                 AlertDialog(
                     onDismissRequest = { showAdicionarCategoria = false },
@@ -212,12 +275,9 @@ fun TelaSenhas() {
                         TextButton(
                             onClick = {
                                 val novaCategoria = novaCategoriaTexto.trim()
-
                                 if (novaCategoria.isNotEmpty() && novaCategoria !in categorias && uid != null) {
                                     categorias.add(novaCategoria)
-
                                     val categoriaData = hashMapOf("nome" to novaCategoria)
-
                                     db.collection("usuarios")
                                         .document(uid)
                                         .collection("categorias")
@@ -229,7 +289,6 @@ fun TelaSenhas() {
                                             println("Erro ao salvar categoria: ${e.message}")
                                         }
                                 }
-
                                 novaCategoriaTexto = ""
                                 showAdicionarCategoria = false
                             }
@@ -250,10 +309,74 @@ fun TelaSenhas() {
                 )
             }
 
+            if (mostrarExcluirCategoria) {
+                val categoriasRemoviveis = categorias.filterNot { it in categoriasFixas }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(Color.Black)
+                ) {
+                    if (categoriasRemoviveis.isEmpty()) {
+                        Text(
+                            "Nenhuma categoria personalizada",
+                            color = Color.Gray,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    } else {
+                        categoriasRemoviveis.forEach { categoria ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            categorias.remove(categoria)
+                                            db.collection("usuarios")
+                                                .document(uid ?: "")
+                                                .collection("categorias")
+                                                .whereEqualTo("nome", categoria)
+                                                .get()
+                                                .addOnSuccessListener { result ->
+                                                    for (document in result) {
+                                                        db.collection("usuarios")
+                                                            .document(uid ?: "")
+                                                            .collection("categorias")
+                                                            .document(document.id)
+                                                            .delete()
+                                                    }
+                                                }
+                                            mostrarExcluirCategoria = false
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = categoria,
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Remover categoria",
+                                        tint = Color.Red
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-
-                if (mostrarFiltro) {
-
+            // ---------------------- FILTRO DE CATEGORIA ---------------------
+            if (mostrarFiltro) {
                 val opcoesFiltro = listOf("Todas") + categorias
                 opcoesFiltro.forEach { opcao ->
                     Button(
@@ -268,13 +391,10 @@ fun TelaSenhas() {
                         Text(opcao, color = Color.White)
                     }
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
             }
-            //exibicao das senhas filtradas
 
-
-            // variáveis de estado para edição/exclusão
+            // -------------------- LISTAGEM DAS SENHAS ---------------------
             var senhaParaEditar by remember { mutableStateOf<Senha?>(null) }
             var senhaParaExcluir by remember { mutableStateOf<Senha?>(null) }
 
@@ -284,24 +404,63 @@ fun TelaSenhas() {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
+                            .padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("🔐 ${senhaItem.titulo}", color = verde)
-                            Text("Categoria: ${senhaItem.categoria}", color = Color.Gray)
-                            Text("Login: ${senhaItem.login}", color = Color.White)
-                            Text("Senha: ${senhaItem.senha}", color = Color.White)
-
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🔐 ${senhaItem.titulo}",
+                                color = verde,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Descricao: ${senhaItem.descricao}",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Categoria: ${senhaItem.categoria}",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Login: ${senhaItem.login}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Senha: ${senhaItem.senha}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 TextButton(onClick = { senhaParaEditar = senhaItem }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Editar",
+                                        tint = verde,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text("EDITAR", color = verde)
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 TextButton(onClick = { senhaParaExcluir = senhaItem }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Excluir",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text("EXCLUIR", color = Color.Red)
                                 }
                             }
@@ -309,20 +468,17 @@ fun TelaSenhas() {
                     }
                 }
 
-            // Filtrei pelo AcessToken para nao ter erro com titulo igual
-            // Popup de edição
+            // ------------------ ALERT DE EDIÇÃO DE SENHA ---------------------
             senhaParaEditar?.let { senha ->
                 var novoTitulo by remember { mutableStateOf(senha.titulo) }
                 var novoLogin by remember { mutableStateOf(senha.login) }
                 var novaSenha by remember { mutableStateOf(senha.senha) }
                 var novaCategoria by remember { mutableStateOf(senha.categoria) }
                 var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
-
                 val bytes = novaSenha.encodeToByteArray()
                 val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
                 val novaSenhaCriptografada = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
                 val novoIv = Base64.encodeToString(iv, Base64.NO_WRAP)
-
                 AlertDialog(
                     onDismissRequest = { senhaParaEditar = null },
                     title = { Text("Editar Senha", color = verde) },
@@ -336,10 +492,7 @@ fun TelaSenhas() {
                                 textStyle = TextStyle(color = Color.White),
                                 modifier = Modifier.fillMaxWidth()
                             )
-
                             Spacer(modifier = Modifier.height(8.dp))
-
-                            // PERGUNTAR PRO MATEUS COMO COLOCAR BORDA NESSE BOTAO. ERRO DE IMPORTAÇAO
                             OutlinedTextField(
                                 value = novaCategoria,
                                 onValueChange = {},
@@ -351,7 +504,6 @@ fun TelaSenhas() {
                                 enabled = false,
                                 readOnly = true
                             )
-
                             if (mostrarOpcoesCategoria) {
                                 categorias.forEach { categoria ->
                                     Button(
@@ -368,9 +520,7 @@ fun TelaSenhas() {
                                     }
                                 }
                             }
-
                             Spacer(modifier = Modifier.height(8.dp))
-
                             OutlinedTextField(
                                 value = novoLogin,
                                 onValueChange = { novoLogin = it },
@@ -378,9 +528,7 @@ fun TelaSenhas() {
                                 textStyle = TextStyle(color = Color.White),
                                 modifier = Modifier.fillMaxWidth()
                             )
-
                             Spacer(modifier = Modifier.height(8.dp))
-
                             OutlinedTextField(
                                 value = novaSenha,
                                 onValueChange = { novaSenha = it },
@@ -431,8 +579,7 @@ fun TelaSenhas() {
                 )
             }
 
-            // Filtrei pelo AcessToken para nao ter erro com titulo igual
-            // Popup de exclusão
+            // ----------------- ALERT DE EXCLUSÃO DE SENHA ---------------------
             senhaParaExcluir?.let { senha ->
                 AlertDialog(
                     onDismissRequest = { senhaParaExcluir = null },
@@ -463,10 +610,9 @@ fun TelaSenhas() {
                     }
                 )
             }
-
-
         }
-        //botao para chamar pop up de adicionar senha
+
+        // -------------- BOTÃO DE ADD SENHA (FAB) ---------------
         FloatingActionButton(
             onClick = { showDialog = true },
             containerColor = verde,
@@ -480,21 +626,21 @@ fun TelaSenhas() {
                 tint = Color.White
             )
         }
-        // Floating Action Button com ícone de QR Code no canto inferior esquerdo
+        // -------------- BOTÃO QR CODE (FAB) -------------------
         FloatingActionButton(
             onClick = {  },
             containerColor = verde,
             modifier = Modifier
-                .align(Alignment.BottomStart) // Posiciona no canto inferior esquerdo
+                .align(Alignment.BottomStart)
                 .padding(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Filled.PlayArrow, // Ícone de QR Code
+                imageVector = Icons.Filled.PlayArrow,
                 contentDescription = "Gerar QR Code",
                 tint = Color.White
             )
         }
-        //exibir pop up
+        // --------------- ALERT DE NOVA SENHA ------------------
         if (showDialog) {
             AlertDialog(
                 containerColor = Color.Black,
@@ -517,9 +663,7 @@ fun TelaSenhas() {
                             textStyle = TextStyle(color = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         )
-
                         Spacer(modifier = Modifier.height(8.dp))
-
                         OutlinedTextField(
                             value = descricao,
                             onValueChange = { descricao = it },
@@ -527,9 +671,7 @@ fun TelaSenhas() {
                             textStyle = TextStyle(color = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         )
-
                         Spacer(modifier = Modifier.height(8.dp))
-
                         OutlinedTextField(
                             value = selectedCategoria,
                             onValueChange = {},
@@ -541,7 +683,6 @@ fun TelaSenhas() {
                             enabled = false,
                             readOnly = true
                         )
-
                         if (mostrarOpcoesCategoria) {
                             categorias.forEach { categoria ->
                                 Button(
@@ -558,7 +699,6 @@ fun TelaSenhas() {
                                 }
                             }
                         }
-
                         OutlinedTextField(
                             value = login,
                             onValueChange = { login = it },
@@ -566,9 +706,7 @@ fun TelaSenhas() {
                             textStyle = TextStyle(color = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         )
-
                         Spacer(modifier = Modifier.height(8.dp))
-
                         OutlinedTextField(
                             value = senha,
                             onValueChange = { senha = it },
@@ -576,9 +714,7 @@ fun TelaSenhas() {
                             textStyle = TextStyle(color = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         )
-
                         Spacer(modifier = Modifier.height(12.dp))
-
                         Button(
                             onClick = {
                                 if (senha.isNotBlank() && selectedCategoria.isNotBlank()) {
@@ -587,10 +723,9 @@ fun TelaSenhas() {
                                     val senhaCriptografadaString = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
                                     val ivString = Base64.encodeToString(iv, Base64.NO_WRAP)
                                     val novoToken = gerarAccessToken()
-                                    val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria, descricao) // se você tiver esse campo na classe
+                                    val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria, descricao)
                                     val novaSenhaCriptografada = SenhaCriptografada(senhaCriptografadaString, ivString)
                                     listaSenhas.add(novaSenha)
-
                                     if (uid != null) {
                                         db.collection("usuarios")
                                             .document(uid)
@@ -613,8 +748,6 @@ fun TelaSenhas() {
                                                 Toast.makeText(context, "Erro!", Toast.LENGTH_SHORT).show()
                                             }
                                     }
-
-                                    // Limpa campos
                                     titulo = ""
                                     descricao = ""
                                     login = ""
@@ -632,10 +765,11 @@ fun TelaSenhas() {
                 }
             )
         }
-
     }
 }
-//gerar token aleatorio de acesso
+
+// ------------------- GERADOR DE ACCESS TOKEN -----------------------
+
 @OptIn(ExperimentalEncodingApi::class)
 fun gerarAccessToken(): String {
     val randomBytes = ByteArray(192)
