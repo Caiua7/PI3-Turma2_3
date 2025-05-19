@@ -154,16 +154,11 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
 
             Button(
                 onClick = {
-                    // Confirmação se as senhas sao iguais
                     if (senha != confirmarSenha) {
-                        Toast.makeText(context, "As senhas não coincidem.", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "As senhas não coincidem.", Toast.LENGTH_SHORT).show()
                     } else if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-                        Toast.makeText(context, "Preencha todos os campos.", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "Preencha todos os campos.", Toast.LENGTH_SHORT).show()
                     } else {
-                        // Usando para criar uma conta no Auth (aqui tem requisito
-                        // de email e senha pelo menos 6 digitos)
                         val auth = FirebaseAuth.getInstance()
                         auth.createUserWithEmailAndPassword(email, senha)
                             .addOnCompleteListener { task ->
@@ -174,7 +169,6 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                         Settings.Secure.ANDROID_ID
                                     )
 
-                                    // Salva o Nome, email, uid e imei no firestore
                                     val userData = hashMapOf(
                                         "nome" to nome,
                                         "email" to email,
@@ -187,20 +181,15 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                         db.collection("usuarios").document(uid)
                                             .set(userData)
                                             .addOnSuccessListener {
+                                                // Envia email de verificação mas não exige isso agora
                                                 auth.currentUser?.sendEmailVerification()
-                                                    ?.addOnCompleteListener { verificationTask -> //envia email de verificacao, e dps verifica
-                                                        if (verificationTask.isSuccessful) {
-                                                            Toast.makeText(context, "Verifique seu e-mail para ativar sua conta.", Toast.LENGTH_LONG).show()
-                                                            val intent = Intent(context, EmailVerificationActivity::class.java)
-                                                            context.startActivity(intent)
-                                                            if (context is Activity) context.finish() //encerra a atividade que verification
-                                                        } else { Toast.makeText(context, "Erro ao enviar email de verificação.", Toast.LENGTH_SHORT).show()
-                                                        }
-                                                    }
 
-                                                if (context is Activity) {
-                                                    context.finish()
-                                                }
+                                                Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_LONG).show()
+
+                                                // Vai direto pra home
+                                                val intent = Intent(context, homeActivity::class.java)
+                                                context.startActivity(intent)
+                                                if (context is Activity) context.finish()
                                             }
                                             .addOnFailureListener { e ->
                                                 Toast.makeText(context, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
