@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.superid.R
 import kotlin.text.encodeToByteArray
+import android.content.Intent
+
 
 // --------------------------- ACTIVITY PRINCIPAL ----------------------------
 
@@ -75,7 +77,7 @@ fun TelaSenhas() {
     var login by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     val listaSenhas = remember { mutableStateListOf<Senha>() }
-    val context = LocalContext.current
+    //val context = LocalContext.current
     var selectedCategoria by remember { mutableStateOf("Sites Web") }
     val categorias = remember { mutableStateListOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico") }
     var filtroCategoria by remember { mutableStateOf("Todas") }
@@ -90,6 +92,7 @@ fun TelaSenhas() {
     var mostrarExcluirCategoria by remember { mutableStateOf(false) }
     val cryptoManager = CryptoManager()
     val categoriasFixas = listOf("Sites Web", "Aplicativos", "Teclados de Acesso Físico")
+    val context = LocalContext.current
 
     // ------------------ Carregamento Inicial ------------------
     LaunchedEffect(Unit) {
@@ -630,19 +633,24 @@ fun TelaSenhas() {
         }
         // -------------- BOTÃO QR CODE (FAB) -------------------
         FloatingActionButton(
-            onClick = { /* sua ação */ },
+            onClick = {
+
+                val intent = Intent(context, EmailVerificationActivity::class.java)
+                context.startActivity(intent)
+            },
             containerColor = verde,
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(16.dp)
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.qrcode), // coloque o arquivo na pasta drawable
-                contentDescription = "Gerar QR Code",
+                painter = painterResource(id = R.drawable.qrcode),
+                contentDescription = "Verificar E-mail",
                 tint = Color.White,
                 modifier = Modifier.size(28.dp)
             )
         }
+
         // --------------- ALERT DE NOVA SENHA ------------------
         if (showDialog) {
             AlertDialog(
