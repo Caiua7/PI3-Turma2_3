@@ -23,10 +23,12 @@ routes.post("/api/perform-auth", async (req: Request, res: Response) => {
     const response = await fetch("https://performauth-qlbxjdguza-rj.a.run.app", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ site, apiKey })
-    });
+        "Content-Type": "application/json",
+        "apikey": apiKey!,
+        "url": site
+  }
+});
+
 
     const data = await response.json();
     res.json(data);
