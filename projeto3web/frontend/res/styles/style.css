@@ -186,3 +186,51 @@ body {
 span {
     color: #FF69B4;
 }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f1f0f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .login-box {
+    background-color: #e0e0e0; /* cinza claro */
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .login-box h2 {
+    margin-bottom: 30px;
+    font-size: 24px;
+    color: #333;
+  }
+
+  .qrcode-area {
+    width: 200px;
+    height: 200px;
+    background-color: white;
+    margin: 0 auto 20px auto;
+    border: 2px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .timer {
+    font-size: 16px;
+    color: #555;
+  }
+
