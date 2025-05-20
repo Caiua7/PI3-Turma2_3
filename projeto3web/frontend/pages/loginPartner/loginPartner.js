@@ -9,7 +9,7 @@ function callPerformAuth() {
       .then(response => response.json())
       .then(data => {
         console.log(data)
-        const base64 = data.qrCodeImage;
+        const base64 = data.qrcodeBase64;
         document.getElementById("qrCodeImg").src = base64;
 
         const timerElement = document.getElementById('timer');
