@@ -11,11 +11,11 @@ Este repositório contém o desenvolvimento do Projeto Integrador do 3° semestr
 - Aplicar técnicas de criptografia para garantir a segurança dos dados.  
 
 ## Integrantes do Grupo  
-- [Bruno Arias Alves Cruz](https://github.com/brunoccruzz) - Desenvolvimento do Aplicativo  
-- [Caiuã Soares Talli Vieira](https://github.com/Caiua7) - Desenvolvimento do Aplicativo  
-- [Igor Ribeiro Cunha](https://github.com/igorrc14) - Desenvolvimento Web  
-- [João Pedro Zangerolamo de Freitas](https://github.com/joaopzf) - Desenvolvimento de Criptografia  
-- [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05)  
+- [Bruno Arias Alves Cruz](https://github.com/brunoccruzz); - Desenvolvimento do App
+- [Caiuã Soares Talli Vieira](https://github.com/Caiua7); - Desenvolvimento do App
+- [Igor Ribeiro Cunha](https://github.com/igorrc14); - Desenvolvimento Web
+- [João Pedro Zangerolamo de Freitas](https://github.com/joaopzf); - Desenvolvimento Criptografia
+- [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05); - Desenvolvimento Camera do app
 
 ## Tecnologias Utilizadas  
 - **Frontend:** [Especificar tecnologias, ex.: React, Flutter]  
@@ -23,16 +23,8 @@ Este repositório contém o desenvolvimento do Projeto Integrador do 3° semestr
 - **Banco de Dados:** [Especificar tecnologias, ex.: MySQL, MongoDB]  
 - **Criptografia:** [Especificar técnicas ou bibliotecas, ex.: AES, RSA]  
 
-## Licença  
-Este projeto está licenciado sob a [Licença MIT](LICENSE).
-
 Repositório do Projeto Integrador do 3° semestre do curso de Engenharia de Software | PUC-Campinas
-Grupo: 
-- [Bruno Arias Alves Cruz](https://github.com/brunoccruzz); - Desenvolvimento do App
-- [Caiuã Soares Talli Vieira](https://github.com/Caiua7); - Desenvolvimento do App
-- [Igor Ribeiro Cunha](https://github.com/igorrc14); - Desenvolvimento Web
-- [João Pedro Zangerolamo de Freitas](https://github.com/joaopzf); - Desenvolvimento Criptografia
-- [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05); - Desenvolvimento Camera do app
+
 
 
   
