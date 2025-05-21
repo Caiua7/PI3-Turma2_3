@@ -40,6 +40,7 @@ export const performAuth = functions.https.
         apiKey,
         dataHora: admin.firestore.FieldValue.serverTimestamp(),
         loginToken,
+        tentativas: 0,
       });
 
       // retorna loginToken e qrcode
@@ -52,11 +53,9 @@ export const performAuth = functions.https.
   });
 
 
-// contador de tentativas (máx. 3)
-const loginAttempts = new Map<string, number>();
-// função getLoginStatus
-export const getLoginStatus = functions.https
-  .onRequest({region: "southamerica-east1"}, async (request, response) => {
+export const getLoginStatus = functions.https.onRequest(
+  {region: "southamerica-east1"},
+  async (request, response) => {
     try {
       const loginToken = request.headers["logintoken"] as string;
 
@@ -65,50 +64,49 @@ export const getLoginStatus = functions.https
         return;
       }
 
-      // buscar documento pelo loginToken
-      const loginDocSnapshot = await admin.firestore()
+      // Busca o documento com esse loginToken
+      const snapshot = await admin.firestore()
         .collection("login")
         .where("loginToken", "==", loginToken)
+        .limit(1)
         .get();
 
-      if (loginDocSnapshot.empty) {
+      if (snapshot.empty) {
         response.status(400).json({error: "Token inválido ou expirado"});
         return;
       }
 
-      const loginDoc = loginDocSnapshot.docs[0];
-      const loginData = loginDoc.data();
+      const doc = snapshot.docs[0];
+      const data = doc.data();
 
-      // verifica se o token já está expirado (depois de 1 minuto)
-      const tempo = admin.firestore.Timestamp.now();
-      const tokenTimestamp = loginData.dataHora;
-      const expirationTime = tokenTimestamp.toMillis() + 60000;
+      // Verifica se passou mais de 1 minuto desde a criação
+      const createdAt = data.dataHora?.toMillis?.();
+      const now = Date.now();
 
-      if (tempo.toMillis() > expirationTime) {
-        loginAttempts.delete(loginToken);
-        await loginDoc.ref.delete();
+      if (!createdAt || now > createdAt + 60000) {
+        await doc.ref.delete();
         response.status(400).
           json({error: "Token expirado, gere um novo QR Code"});
         return;
       }
 
-      // verifica o número de tentativas
-      const attempts = (loginAttempts.get(loginToken) || 0) + 1;
-      loginAttempts.set(loginToken, attempts);
-
-      if (attempts > 3) {
-        loginAttempts.delete(loginToken);
-        await loginDoc.ref.delete();
+      // Verifica tentativas
+      const tentativas = data.tentativas ?? 0;
+      if (tentativas >= 3) {
+        await doc.ref.delete();
         response.status(400).
           json({error: "Máximo de tentativas excedido, gere um novo QR Code"});
         return;
       }
 
+      // Incrementa tentativas
+      await doc.ref.update({tentativas: tentativas + 1});
 
-      // retornar o usuário autenticado
-      const user = loginData.user || "Usuário desconhecido";
+      const user = data.user ?? "Usuário desconhecido";
       response.status(200).json({status: "Autenticado", user});
     } catch (error) {
+      console.error("Erro em getLoginStatus:", error);
       response.status(500).json({error: "Erro interno do servidor"});
     }
-  });
+  }
+);
