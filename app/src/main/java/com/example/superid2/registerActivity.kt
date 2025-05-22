@@ -1,5 +1,6 @@
 package com.example.superid2
 
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -44,8 +45,12 @@ import com.google.firebase.firestore.firestore
 import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
-
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.IconButton
 
 
 class registerActivity : ComponentActivity() {
@@ -68,6 +73,8 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
+    var senhaVisivel by remember { mutableStateOf(false) }
+    var confirmarSenhaVisivel by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -138,7 +145,15 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                 textStyle = TextStyle(color = Color.White),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 10.dp)
+                    .padding(bottom = 10.dp),
+                visualTransformation = if (senhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (senhaVisivel) Icons.Filled.Person else Icons.Filled.Lock
+                    val description = if (senhaVisivel) "Mostrar senha" else "Ocultar senha"
+                    IconButton(onClick = { senhaVisivel = !senhaVisivel }) {
+                        Icon(imageVector = image, contentDescription = description, tint = Color.White)
+                    }
+                }
             )
 
             OutlinedTextField(
@@ -149,7 +164,15 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                 textStyle = TextStyle(color = Color.White),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                visualTransformation = if (confirmarSenhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (confirmarSenhaVisivel) Icons.Filled.Person else Icons.Filled.Lock
+                    val description = if (confirmarSenhaVisivel) "Mostrar senha" else "Ocultar senha"
+                    IconButton(onClick = { confirmarSenhaVisivel = !confirmarSenhaVisivel }) {
+                        Icon(imageVector = image, contentDescription = description, tint = Color.White)
+                    }
+                }
             )
 
             Button(
@@ -182,7 +205,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                             .set(userData)
                                             .addOnSuccessListener {
                                                 // Envia email de verificação mas não exige isso agora
-                                                auth.currentUser?.sendEmailVerification()
+                                                //auth.currentUser?.sendEmailVerification()
 
                                                 Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_LONG).show()
 

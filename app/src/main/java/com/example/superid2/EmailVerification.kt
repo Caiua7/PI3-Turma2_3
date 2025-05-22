@@ -61,9 +61,9 @@ fun EmailVerificationScreen() {
             onClick = {
                 user?.reload()?.addOnCompleteListener { task -> //verificacao para ver se usuario clicou no link de verificacao
                     if (user.isEmailVerified) {
-                        Toast.makeText(context, "Email verificado com sucesso!", Toast.LENGTH_SHORT).show() //mostra a confirmacao
-                        context.startActivity(Intent(context, homeActivity::class.java))//abre tela home
-                        if (context is Activity) context.finish() //verifica se e a atividade atual, se for, finaliza com finish
+                        Toast.makeText(context, "Email verificado com sucesso!", Toast.LENGTH_SHORT).show()
+                        context.startActivity(Intent(context, QrScannerActivity::class.java)) // Agora abre o QR
+                        if (context is Activity) context.finish()
                     } else {
                         Toast.makeText(context, "Seu e-mail ainda não foi verificado.", Toast.LENGTH_SHORT).show()
                     }
