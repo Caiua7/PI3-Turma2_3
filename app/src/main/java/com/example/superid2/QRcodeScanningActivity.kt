@@ -12,7 +12,9 @@ import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
@@ -44,6 +46,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.example.superid2.WithPermission
 import org.json.JSONObject
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -62,68 +65,32 @@ class QrScannerActivity : ComponentActivity() {
 }
 
 class BarcodeAnalyzer(
-    private val onResult: (loginToken: String, status: String) -> Unit
+    private val onBarcodeScanned: (String) -> Unit
 ) : ImageAnalysis.Analyzer {
 
     private val scanner = BarcodeScanning.getClient()
-    private var isProcessing = false
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(imageProxy: ImageProxy) {
-        if (isProcessing) {
-            imageProxy.close()
-            return
-        }
-
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-            isProcessing = true
 
             scanner.process(image)
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
-                        val value = barcode.rawValue
-                        if (value != null) {
-                            verificarLoginStatus(value) { response ->
-                                if (response.trim().startsWith("{")) {
-                                    try {
-                                        val json = JSONObject(response)
-                                        val status = json.optString("status", "")
-
-                                        val userUid = FirebaseAuth.getInstance().currentUser?.uid
-                                        if (userUid == null) {
-                                            Log.e("SuperID", "Usuário não está logado")
-                                            onResult(value, "erro")
-                                            return@verificarLoginStatus
-                                        }
-
-                                        if (status != "confirmado") {
-                                            confirmarLoginToken(value, userUid)
-                                            onResult(value, "confirmado")
-                                        } else {
-                                            onResult(value, "confirmado")
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.e("SuperID", "Erro no JSON ou status: ${e.message}")
-                                        onResult(value, "erro")
-                                    }
-                                } else {
-                                    // Caso response não seja JSON válido, trate como erro
-                                    Log.e("SuperID", "Resposta inesperada (não é JSON): $response")
-                                    onResult(value, "erro")
-                                }
-                            }
-                            break
+                        barcode.rawValue?.let { value ->
+                            Log.d("QRCode", "Scanned: $value")
+                            onBarcodeScanned(value)
+                            imageProxy.close() // fecha depois de processar
+                            return@addOnSuccessListener
                         }
                     }
+                    imageProxy.close()
                 }
                 .addOnFailureListener {
                     Log.e("QRCode", "Erro ao processar: ${it.message}")
-                }
-                .addOnCompleteListener {
                     imageProxy.close()
-                    isProcessing = false
                 }
         } else {
             imageProxy.close()
@@ -131,17 +98,14 @@ class BarcodeAnalyzer(
     }
 }
 
-
 @Composable
 fun CameraPreview(
     modifier: Modifier = Modifier,
     lensFacing: Int,
-    zoomLevel: Float,
-    imageCaptureUseCase: ImageCapture,
-    analyzer: ImageAnalysis.Analyzer
-) {
+    imageCaptureUseCase: ImageCapture
+){
     val previewUseCase = remember {
-        androidx.camera.core.Preview.Builder().build()
+        Preview.Builder().build()
     }
 
     var cameraProvider by remember {
@@ -154,22 +118,28 @@ fun CameraPreview(
 
     val localContext = LocalContext.current
 
-    val imageAnalyzer = remember(analyzer) {
+    val imageAnalyzer = remember(localContext) {
         ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also {
-                it.setAnalyzer(ContextCompat.getMainExecutor(localContext), analyzer)
+                it.setAnalyzer(
+                    ContextCompat.getMainExecutor(localContext),
+                    BarcodeAnalyzer { result ->
+                        Log.d("QRCode", "Resultado do QR: $result")
+                        // Ação ao escanear QR
+                    }
+                )
             }
     }
 
-    fun rebindCameraProvider() {
-        cameraProvider?.let { provider ->
+    fun rebindCameraProvider(){
+        cameraProvider?.let {cameraProvider ->
             val cameraSelector = CameraSelector.Builder()
                 .requireLensFacing(lensFacing)
                 .build()
-            provider.unbindAll()
-            val camera = provider.bindToLifecycle(
+            cameraProvider.unbindAll()
+            val camera = cameraProvider.bindToLifecycle(
                 localContext as LifecycleOwner,
                 cameraSelector,
                 previewUseCase,
@@ -179,13 +149,13 @@ fun CameraPreview(
             cameraControl = camera.cameraControl
         }
     }
-
     LaunchedEffect(Unit) {
-        cameraProvider = ProcessCameraProvider.awaitInstance(localContext)
+        cameraProvider = ProcessCameraProvider
+            .awaitInstance(localContext)
         rebindCameraProvider()
     }
 
-    LaunchedEffect(lensFacing) {
+    LaunchedEffect(lensFacing){
         rebindCameraProvider()
     }
 
@@ -194,6 +164,7 @@ fun CameraPreview(
         factory = { context ->
             PreviewView(context).also {
                 previewUseCase.surfaceProvider = it.surfaceProvider
+                rebindCameraProvider()
             }
         }
     )
@@ -201,106 +172,46 @@ fun CameraPreview(
 
 @Composable
 fun TakePhotoScreen() {
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
-
-    val imageCaptureUseCase = remember { ImageCapture.Builder().build() }
-
-    val analyzer = remember {
-        BarcodeAnalyzer { _, status ->
-            activity?.runOnUiThread {
-                Toast.makeText(
-                    context,
-                    when (status.lowercase()) {
-                        "confirmado" -> "Login concluído"
-                        "aguardando confirmação" -> "Aguardando confirmação"
-                        else -> "Falha no login"
-                    },
-                    Toast.LENGTH_LONG
-                ).show()
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    activity.finish()
-                }, 150)
-            }
-        }
-    }
-
     var lensFacing by remember {
-        mutableIntStateOf(CameraSelector.LENS_FACING_BACK)
+        mutableIntStateOf(CameraSelector.LENS_FACING_FRONT)
     }
-    var zoomLevel by remember {
-        mutableFloatStateOf(0.0f)
+    var imageCaptureUseCase = remember {
+        ImageCapture.Builder().build()
     }
+    val localContext = LocalContext.current
+
 
     Box {
         CameraPreview(
             lensFacing = lensFacing,
-            zoomLevel = zoomLevel,
-            imageCaptureUseCase = imageCaptureUseCase,
-            analyzer = analyzer
+            imageCaptureUseCase = imageCaptureUseCase
         )
 
         Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Row {
-                Button(
-                    onClick = { lensFacing = CameraSelector.LENS_FACING_FRONT }
-                ) { Text("Frontal") }
-                Button(
-                    onClick = { lensFacing = CameraSelector.LENS_FACING_BACK }
-                ) { Text("Traseira") }
-            }
-            Row {
-                Button(onClick = { zoomLevel = 0.0f }) { Text("Zoom 0") }
-                Button(onClick = { zoomLevel = 0.5f }) { Text("Zoom 0.5") }
-                Button(onClick = { zoomLevel = 1.0f }) { Text("Zoom 1.0") }
+            Button(
+                onClick = {
+                    val outputFileOptions = ImageCapture.OutputFileOptions.Builder(
+                        File(localContext.externalCacheDir, "image.jpg")
+                    ).build()
+                    val callback = object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(
+                            outputFileResults: ImageCapture.OutputFileResults
+                        ) {
+                            Log.i("Câmera", "Imagem salva no diretório dentro do app.")
+                        }
+
+                        override fun onError(exception: ImageCaptureException) {
+                            Log.e("Câmera", "Imagem não foi salva" + exception.message)
+                        }
+                    }
+                    imageCaptureUseCase.takePicture(
+                        outputFileOptions,
+                        ContextCompat.getMainExecutor(localContext), callback
+                    )
+                }
+            ) {
+                Text("TakePhoto")
             }
         }
     }
-}
-
-fun verificarLoginStatus(loginToken: String, onResult: (String) -> Unit) {
-    Thread {
-        try {
-            val url = URL("https://getloginstatus-nl2bfugfma-uc.a.run.app")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.doOutput = true
-
-            val jsonBody = """{"loginToken": "$loginToken"}"""
-            conn.outputStream.write(jsonBody.toByteArray())
-
-            val encoding = conn.getHeaderField("Content-Encoding")
-            val inputStream = if (encoding != null && encoding.equals("gzip", ignoreCase = true)) {
-                java.util.zip.GZIPInputStream(conn.inputStream)
-            } else {
-                conn.inputStream
-            }
-
-            val response = inputStream.bufferedReader().use { it.readText() }
-            onResult(response)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onResult("Erro: ${e.message}")
-        }
-    }.start()
-}
-
-fun confirmarLoginToken(token: String, userUid: String) {
-    val db = FirebaseFirestore.getInstance()
-    val docRef = db.collection("login").document(token)
-
-    val data = hashMapOf(
-        "uid" to userUid,
-        "status" to "confirmado",
-        "timestamp" to FieldValue.serverTimestamp()
-    )
-
-    docRef.set(data)
-        .addOnSuccessListener {
-            Log.d("SuperID", "Login confirmado e salvo no Firestore")
-        }
-        .addOnFailureListener { e ->
-            Log.e("SuperID", "Erro ao atualizar Firestore: ${e.message}")
-        }
 }
