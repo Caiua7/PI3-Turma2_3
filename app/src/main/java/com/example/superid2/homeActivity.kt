@@ -637,6 +637,7 @@ fun TelaSenhas() {
 
                 val intent = Intent(context, EmailVerificationActivity::class.java)
                 context.startActivity(intent)
+                auth.currentUser?.sendEmailVerification()
             },
             containerColor = verde,
             modifier = Modifier
