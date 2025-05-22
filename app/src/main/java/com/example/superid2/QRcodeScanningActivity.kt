@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
@@ -46,9 +47,7 @@ class QrScannerActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WithPermission(
-                modifier = Modifier.padding(),
-                permission = Manifest.permission.CAMERA,
-                permissionTextButton = "Conceder acesso a câmera"
+                permission = Manifest.permission.CAMERA
             ) {
                 TakePhotoScreen()
             }
@@ -177,32 +176,5 @@ fun TakePhotoScreen() {
             lensFacing = lensFacing,
             imageCaptureUseCase = imageCaptureUseCase
         )
-
-        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Button(
-                onClick = {
-                    val outputFileOptions = ImageCapture.OutputFileOptions.Builder(
-                        File(localContext.externalCacheDir, "image.jpg")
-                    ).build()
-                    val callback = object : ImageCapture.OnImageSavedCallback {
-                        override fun onImageSaved(
-                            outputFileResults: ImageCapture.OutputFileResults
-                        ) {
-                            Log.i("Câmera", "Imagem salva no diretório dentro do app.")
-                        }
-
-                        override fun onError(exception: ImageCaptureException) {
-                            Log.e("Câmera", "Imagem não foi salva" + exception.message)
-                        }
-                    }
-                    imageCaptureUseCase.takePicture(
-                        outputFileOptions,
-                        ContextCompat.getMainExecutor(localContext), callback
-                    )
-                }
-            ) {
-                Text("TakePhoto")
-            }
-        }
     }
 }

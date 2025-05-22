@@ -1,5 +1,6 @@
 package com.example.superid2
 
+import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -71,7 +72,6 @@ import java.text.Normalizer
 import androidx.core.content.edit
 
 
-
 class loginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,26 +86,34 @@ class loginActivity : ComponentActivity() {
 
         setContent {
             SuperID2Theme {
-                // Define se o popup de termos deve ser exibido com base no SharedPreferences
-                var mostrarPopup by remember { mutableStateOf(!jaAceitouTermos) }
-                //chama a composable de login
-                LoginWithButton(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                        .wrapContentSize(Alignment.Center),
-                    mostrarPopup = mostrarPopup,
-                    aoAceitarTermos = {
-                        // Marca que o usuário aceitou os termos
-                        sharedPrefs.edit() { putBoolean("aceitou_termos", true) }
-                        mostrarPopup = false
-                    },
-                    aoFecharPopup = {
-                        mostrarPopup = false
-                    }
-                )
+                WithPermission(permission = Manifest.permission.CAMERA) {
+                    var mostrarPopup by remember { mutableStateOf(!jaAceitouTermos) }
+
+                    LoginWithButton(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black)
+                            .wrapContentSize(Alignment.Center),
+                        mostrarPopup = mostrarPopup,
+                        aoAceitarTermos = {
+                            sharedPrefs.edit() { putBoolean("aceitou_termos", true) }
+                            mostrarPopup = false
+                        },
+                        aoFecharPopup = {
+                            mostrarPopup = false
+                        }
+                    )
+                }
             }
         }
+
+    }
+}
+
+@Composable
+fun PermissionAndWelcomeFlow() {
+    WithPermission(permission = Manifest.permission.CAMERA) {
+
     }
 }
 
