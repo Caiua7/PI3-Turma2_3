@@ -182,7 +182,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                                             .set(userData)
                                             .addOnSuccessListener {
                                                 // Envia email de verificação mas não exige isso agora
-                                                auth.currentUser?.sendEmailVerification()
+                                                //auth.currentUser?.sendEmailVerification()
 
                                                 Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_LONG).show()
 
