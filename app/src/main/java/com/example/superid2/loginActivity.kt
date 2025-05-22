@@ -40,7 +40,6 @@ import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -58,6 +57,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.IconButton
@@ -66,6 +67,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.window.Dialog
 import com.example.superid2.TermosPopup
 import java.text.Normalizer
@@ -128,6 +131,7 @@ fun LoginWithButton(
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     val verde = Color(0xFF1B5E20)
+    var senhaVisivel by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -164,7 +168,15 @@ fun LoginWithButton(
                 leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
                 modifier = Modifier
                     .background(Color.Black)
-                    .padding(bottom = 3.dp)
+                    .padding(bottom = 3.dp),
+                visualTransformation = if (senhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (senhaVisivel) Icons.Filled.Person else Icons.Filled.Lock
+                    val description = if (senhaVisivel) "Ocultar senha" else "Mostrar senha"
+                    IconButton(onClick = { senhaVisivel = !senhaVisivel }) {
+                        Icon(imageVector = image, contentDescription = description, tint = Color.White)
+                    }
+                }
             )
                 //botao recuperar senha
             Row(

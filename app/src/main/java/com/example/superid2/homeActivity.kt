@@ -161,7 +161,7 @@ fun TelaSenhas() {
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ----------------- TÍTULO BONITO DA PÁGINA ------------------
+            // ----------------- TÍTULO DA PÁGINA ------------------
             Spacer(modifier = Modifier.height(24.dp))
             Column(
                 modifier = Modifier
@@ -195,7 +195,7 @@ fun TelaSenhas() {
             }
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ------------------- BOTÕES DE AÇÃO EM LINHA --------------------
+            // ------------------- Text Buttons linha  --------------------
             var mostrarFiltro by remember { mutableStateOf(false) }
             Row(
                 modifier = Modifier
@@ -261,8 +261,10 @@ fun TelaSenhas() {
                 }
             }
 
-            // ------------------- DIALOGS DE CATEGORIA ---------------------
+            // ------------------- Editar cateforias ---------------------
             if (showAdicionarCategoria) {
+                val context = LocalContext.current
+
                 AlertDialog(
                     onDismissRequest = { showAdicionarCategoria = false },
                     title = { Text("Nova Categoria", color = verde) },
@@ -288,6 +290,7 @@ fun TelaSenhas() {
                                         .collection("categorias")
                                         .add(categoriaData)
                                         .addOnSuccessListener {
+                                            Toast.makeText(context, "Categoria adicionada", Toast.LENGTH_SHORT).show()
                                             println("Categoria salva no Firebase.")
                                         }
                                         .addOnFailureListener { e ->
@@ -475,6 +478,7 @@ fun TelaSenhas() {
 
             // ------------------ ALERT DE EDIÇÃO DE SENHA ---------------------
             senhaParaEditar?.let { senha ->
+                val context = LocalContext.current
                 var novoTitulo by remember { mutableStateOf(senha.titulo) }
                 var novoLogin by remember { mutableStateOf(senha.login) }
                 var novaSenha by remember { mutableStateOf(senha.senha) }
@@ -546,6 +550,16 @@ fun TelaSenhas() {
                     confirmButton = {
                         TextButton(
                             onClick = {
+                                // --------- Validação dos campos obrigatórios -----------
+                                if (novaSenha.isBlank() || novaCategoria.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Preencha os campos obrigatórios: Senha e Categoria.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@TextButton
+                                }
+                                // -------------------------------------------------------
                                 val docRef = db.collection("usuarios").document(uid!!).collection("senhas")
                                 docRef.whereEqualTo("accessToken", senha.accessToken).get()
                                     .addOnSuccessListener { query ->
@@ -583,6 +597,7 @@ fun TelaSenhas() {
                     }
                 )
             }
+
 
             // ----------------- ALERT DE EXCLUSÃO DE SENHA ---------------------
             senhaParaExcluir?.let { senha ->
@@ -634,9 +649,17 @@ fun TelaSenhas() {
         // -------------- BOTÃO QR CODE (FAB) -------------------
         FloatingActionButton(
             onClick = {
-
-                val intent = Intent(context, QrScannerActivity::class.java)
-                context.startActivity(intent)
+                val user = auth.currentUser
+                if (user != null) {
+                    if (!user.isEmailVerified) {
+                        user.sendEmailVerification()
+                        val intent = Intent(context, EmailVerificationActivity::class.java)
+                        context.startActivity(intent)
+                    } else {
+                        val intent = Intent(context, QrScannerActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                }
             },
             containerColor = verde,
             modifier = Modifier
@@ -650,6 +673,7 @@ fun TelaSenhas() {
                 modifier = Modifier.size(28.dp)
             )
         }
+
 
         // --------------- ALERT DE NOVA SENHA ------------------
         if (showDialog) {
