@@ -635,7 +635,7 @@ fun TelaSenhas() {
         FloatingActionButton(
             onClick = {
 
-                val intent = Intent(context, EmailVerificationActivity::class.java)
+                val intent = Intent(context, QrScannerActivity::class.java)
                 context.startActivity(intent)
             },
             containerColor = verde,
