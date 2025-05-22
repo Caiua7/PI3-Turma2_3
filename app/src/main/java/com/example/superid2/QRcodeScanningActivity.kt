@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,14 +19,13 @@ import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,17 +36,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import com.example.superid2.WithPermission
-import org.json.JSONObject
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 
 class QrScannerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +46,9 @@ class QrScannerActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WithPermission(
+                modifier = Modifier.padding(),
                 permission = Manifest.permission.CAMERA,
+                permissionTextButton = "Conceder acesso a câmera"
             ) {
                 TakePhotoScreen()
             }
@@ -82,7 +74,7 @@ class BarcodeAnalyzer(
                         barcode.rawValue?.let { value ->
                             Log.d("QRCode", "Scanned: $value")
                             onBarcodeScanned(value)
-                            imageProxy.close() // fecha depois de processar
+                            imageProxy.close()
                             return@addOnSuccessListener
                         }
                     }
@@ -127,7 +119,6 @@ fun CameraPreview(
                     ContextCompat.getMainExecutor(localContext),
                     BarcodeAnalyzer { result ->
                         Log.d("QRCode", "Resultado do QR: $result")
-                        // Ação ao escanear QR
                     }
                 )
             }
