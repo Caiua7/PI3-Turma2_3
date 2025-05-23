@@ -37,6 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import java.io.File
@@ -117,7 +120,7 @@ fun CameraPreview(
                 it.setAnalyzer(
                     ContextCompat.getMainExecutor(localContext),
                     BarcodeAnalyzer { result ->
-                        Log.d("QRCode", "Resultado do QR: $result")
+                       buscarDocLogin(result)
                     }
                 )
             }
@@ -178,3 +181,19 @@ fun TakePhotoScreen() {
         )
     }
 }
+
+fun buscarDocLogin(tokenLogin: String) {
+    val firestore = Firebase.firestore
+    val usuarioAtual = Firebase.auth.currentUser
+
+    firestore.collection("login")
+        .whereEqualTo("loginToken", tokenLogin)
+        .get()
+        .addOnSuccessListener { resultado ->
+            if (!resultado.isEmpty) {
+                val documentoLogin = resultado.documents.first()
+                documentoLogin.reference.update("uid", usuarioAtual?.uid)
+            }
+        }
+}
+
