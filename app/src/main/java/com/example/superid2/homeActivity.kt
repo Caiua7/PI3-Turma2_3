@@ -582,6 +582,22 @@ fun TelaSenhas() {
                                     ).show()
                                     return@TextButton
                                 }
+                                if (novaCategoria == "Sites Web") {
+                                    val urlJaExiste = listaSenhas.any {
+                                        it.categoria == "Sites Web" &&
+                                                it.titulo == novoTitulo &&
+                                                it.accessToken != senha.accessToken
+                                    }
+
+                                    if (urlJaExiste) {
+                                        Toast.makeText(
+                                            context,
+                                            "Já existe uma senha cadastrada com esse URL.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@TextButton
+                                    }
+                                }
                                 // -------------------------------------------------------
                                 val docRef =
                                     db.collection("usuarios").document(uid!!).collection("senhas")
@@ -832,6 +848,22 @@ fun TelaSenhas() {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     return@Button
+                                }
+
+                                if (selectedCategoria.equals("Sites Web", ignoreCase = true)) {
+                                    val urlRepetido = listaSenhas.any {
+                                        it.categoria.equals("Sites Web", ignoreCase = true) &&
+                                                it.titulo.equals(titulo, ignoreCase = true)
+                                    }
+
+                                    if (urlRepetido) {
+                                        Toast.makeText(
+                                            context,
+                                            "Já existe uma senha cadastrada com esse URL.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@Button
+                                    }
                                 }
 
                                 if (senha.isNotBlank()) {
