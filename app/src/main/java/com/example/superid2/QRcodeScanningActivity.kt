@@ -2,8 +2,10 @@ package com.example.superid2
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,18 +13,13 @@ import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,10 +27,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
@@ -42,7 +37,6 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import java.io.File
 
 class QrScannerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +53,8 @@ class QrScannerActivity : ComponentActivity() {
 }
 
 class BarcodeAnalyzer(
-    private val onBarcodeScanned: (String) -> Unit
+    private val onBarcodeScanned: (String) -> Unit,
+    private val activity: ComponentActivity
 ) : ImageAnalysis.Analyzer {
 
     private val scanner = BarcodeScanning.getClient()
@@ -74,8 +69,9 @@ class BarcodeAnalyzer(
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
                         barcode.rawValue?.let { value ->
-                            Log.d("QRCode", "Scanned: $value")
                             onBarcodeScanned(value)
+
+
                             imageProxy.close()
                             return@addOnSuccessListener
                         }
@@ -83,7 +79,6 @@ class BarcodeAnalyzer(
                     imageProxy.close()
                 }
                 .addOnFailureListener {
-                    Log.e("QRCode", "Erro ao processar: ${it.message}")
                     imageProxy.close()
                 }
         } else {
@@ -96,7 +91,8 @@ class BarcodeAnalyzer(
 fun CameraPreview(
     modifier: Modifier = Modifier,
     lensFacing: Int,
-    imageCaptureUseCase: ImageCapture
+    imageCaptureUseCase: ImageCapture,
+    activity: ComponentActivity
 ){
     val previewUseCase = remember {
         Preview.Builder().build()
@@ -119,9 +115,12 @@ fun CameraPreview(
             .also {
                 it.setAnalyzer(
                     ContextCompat.getMainExecutor(localContext),
-                    BarcodeAnalyzer { result ->
-                       buscarDocLogin(result)
-                    }
+                    BarcodeAnalyzer(
+                        onBarcodeScanned = { result ->
+                            buscarDocLogin(result, activity, activity)
+                        },
+                        activity = activity
+                    )
                 )
             }
     }
@@ -166,7 +165,7 @@ fun CameraPreview(
 @Composable
 fun TakePhotoScreen() {
     var lensFacing by remember {
-        mutableIntStateOf(CameraSelector.LENS_FACING_FRONT)
+        mutableIntStateOf(CameraSelector.LENS_FACING_BACK)
     }
     var imageCaptureUseCase = remember {
         ImageCapture.Builder().build()
@@ -176,15 +175,17 @@ fun TakePhotoScreen() {
 
     Box {
         CameraPreview(
-            lensFacing = lensFacing,
-            imageCaptureUseCase = imageCaptureUseCase
-        )
+        lensFacing = lensFacing,
+        imageCaptureUseCase = imageCaptureUseCase,
+        activity = localContext as ComponentActivity
+    )
+
     }
 }
 
-fun buscarDocLogin(tokenLogin: String) {
+fun buscarDocLogin(tokenLogin: String, context: Context, activity: ComponentActivity) {
     val firestore = Firebase.firestore
-    val usuarioAtual = Firebase.auth.currentUser
+    val usuarioAtual = Firebase.auth.currentUser ?: return
 
     firestore.collection("login")
         .whereEqualTo("loginToken", tokenLogin)
@@ -192,8 +193,23 @@ fun buscarDocLogin(tokenLogin: String) {
         .addOnSuccessListener { resultado ->
             if (!resultado.isEmpty) {
                 val documentoLogin = resultado.documents.first()
-                documentoLogin.reference.update("uid", usuarioAtual?.uid)
+                val titulo = documentoLogin.getString("titulo") ?: return@addOnSuccessListener
+
+                firestore.collection("usuarios")
+                    .document(usuarioAtual.uid)
+                    .collection("senhas")
+                    .whereEqualTo("titulo", titulo)
+                    .get()
+                    .addOnSuccessListener { senhas ->
+                        if (!senhas.isEmpty) {
+                            documentoLogin.reference.update("uid", usuarioAtual.uid)
+                            activity.finish()
+                        } else {
+                            Toast.makeText(context, "Você não tem uma senha cadastrada para esse site.", Toast.LENGTH_LONG).show()
+                        }
+                    }
             }
         }
 }
+
 
