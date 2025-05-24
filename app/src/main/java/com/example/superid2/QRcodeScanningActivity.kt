@@ -193,23 +193,37 @@ fun buscarDocLogin(tokenLogin: String, context: Context, activity: ComponentActi
         .addOnSuccessListener { resultado ->
             if (!resultado.isEmpty) {
                 val documentoLogin = resultado.documents.first()
-                val titulo = documentoLogin.getString("titulo") ?: return@addOnSuccessListener
+                val url = documentoLogin.getString("url")
 
-                firestore.collection("usuarios")
-                    .document(usuarioAtual.uid)
-                    .collection("senhas")
-                    .whereEqualTo("titulo", titulo)
-                    .get()
-                    .addOnSuccessListener { senhas ->
-                        if (!senhas.isEmpty) {
-                            documentoLogin.reference.update("uid", usuarioAtual.uid)
-                            activity.finish()
-                        } else {
-                            Toast.makeText(context, "Você não tem uma senha cadastrada para esse site.", Toast.LENGTH_LONG).show()
+                if (url != null) {
+                    firestore.collection("usuarios")
+                        .document(usuarioAtual.uid)
+                        .collection("senhas")
+                        .whereEqualTo("titulo", url)
+                        .get()
+                        .addOnSuccessListener { senhas ->
+                            if (!senhas.isEmpty) {
+                                documentoLogin.reference.update("uid", usuarioAtual.uid)
+                                    .addOnSuccessListener {
+                                        activity.finish()
+                                    }
+                            } else {
+                                Toast.makeText(context, "Você não tem uma senha para este site.", Toast.LENGTH_LONG).show()
+                                activity.finish()
+                            }
                         }
-                    }
+                } else {
+                    Toast.makeText(context, "QR Code inválido: campo 'url' ausente.", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(context, "Login não encontrado.", Toast.LENGTH_LONG).show()
             }
         }
+        .addOnFailureListener {
+            Toast.makeText(context, "Erro ao buscar login.", Toast.LENGTH_LONG).show()
+        }
 }
+
+
 
 
