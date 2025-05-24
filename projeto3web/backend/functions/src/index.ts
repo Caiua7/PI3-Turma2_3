@@ -41,6 +41,7 @@ export const performAuth = functions.https.
         dataHora: admin.firestore.FieldValue.serverTimestamp(),
         loginToken,
         tentativas: 0,
+        url: "www.cursini.com.br",
       });
 
       // retorna loginToken e qrcode
