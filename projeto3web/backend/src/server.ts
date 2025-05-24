@@ -38,10 +38,26 @@ routes.post("/api/perform-auth", async (req: Request, res: Response) => {
   }
 });
 
-routes.get('/', (req: Request, res: Response)=>{
-    res.statusCode = 403;
-    res.send('Acesso não permitido. Rota default não definida.');
+routes.post("/api/get-login-status", async (req: Request, res: Response) => {
+  const loginToken = req.headers["login-token"] as string;
+
+  try {
+    const response = await fetch("https://getloginstatus-qlbxjdguza-rj.a.run.app", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "login-token": loginToken
+      },
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    console.error("Erro ao chamar getLoginStatus:", error.message);
+    res.status(500).json({ error: "Erro ao identificar usuário fazendo login." });
+  }
 });
+
 
 routes.get("/loginPartner", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../frontend/pages/loginPartner/loginPartner.html"));
@@ -50,3 +66,6 @@ routes.get("/loginPartner", (req: Request, res: Response) => {
 app.listen(port, ()=>{
     console.log(`Server is running on: ${port}`)
 })
+
+
+

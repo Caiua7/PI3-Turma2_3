@@ -42,11 +42,13 @@ export const performAuth = functions.https.
         loginToken,
         tentativas: 0,
         url: "www.cursini.com.br",
+        status: "aguardando autenticação",
       });
 
       // retorna loginToken e qrcode
       response.status(200).json({
         qrcodeBase64: qrCodeBase64,
+        loginToken: loginToken,
       });
     } catch (error) {
       response.status(500).json({error: "Erro interno do servidor"});
@@ -58,7 +60,7 @@ export const getLoginStatus = functions.https.onRequest(
   {region: "southamerica-east1"},
   async (request, response) => {
     try {
-      const loginToken = request.headers["logintoken"] as string;
+      const loginToken = request.headers["login-token"] as string;
 
       if (!loginToken) {
         response.status(400).json({error: "Header loginToken ausente"});
@@ -100,11 +102,18 @@ export const getLoginStatus = functions.https.onRequest(
         return;
       }
 
-      // Incrementa tentativas
-      await doc.ref.update({tentativas: tentativas + 1});
+      const updates: any = {tentativas: tentativas + 1};
 
-      const user = data.user ?? "Usuário desconhecido";
-      response.status(200).json({status: "Autenticado", user});
+      if (data.uid) {
+        updates.status = "Autenticado";
+      }
+
+      await doc.ref.update(updates);
+
+      response.status(200).json({
+        status: data.uid ? "Autenticado" : "Aguardando autenticação",
+        uid: data.uid ?? null,
+      });
     } catch (error) {
       console.error("Erro em getLoginStatus:", error);
       response.status(500).json({error: "Erro interno do servidor"});
