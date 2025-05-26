@@ -13,15 +13,9 @@ Este repositório contém o desenvolvimento do Projeto Integrador do 3° semestr
 ## Integrantes do Grupo  
 - [Bruno Arias Alves Cruz](https://github.com/brunoccruzz); - Desenvolvimento do App
 - [Caiuã Soares Talli Vieira](https://github.com/Caiua7); - Desenvolvimento do App
-- [Igor Ribeiro Cunha](https://github.com/igorrc14); - Desenvolvimento Web
+- [Igor Ribeiro Cunha](https://github.com/igorrc14); - Desenvolvimento Web / Desenvolvimento Camera do app
 - [João Pedro Zangerolamo de Freitas](https://github.com/joaopzf); - Desenvolvimento Criptografia
-- [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05); - Desenvolvimento Camera do app
-
-## Tecnologias Utilizadas  
-- **Frontend:** [Especificar tecnologias, ex.: React, Flutter]  
-- **Backend:** [Especificar tecnologias, ex.: Node.js, Django]  
-- **Banco de Dados:** [Especificar tecnologias, ex.: MySQL, MongoDB]  
-- **Criptografia:** [Especificar técnicas ou bibliotecas, ex.: AES, RSA]  
+- [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05); - Desenvolvimento Camera do app 
 
 Repositório do Projeto Integrador do 3° semestre do curso de Engenharia de Software | PUC-Campinas
 
