@@ -161,7 +161,7 @@ fun TelaSenhas() {
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ----------------- TÍTULO BONITO DA PÁGINA ------------------
+            // ----------------- TÍTULO DA PÁGINA ------------------
             Spacer(modifier = Modifier.height(24.dp))
             Column(
                 modifier = Modifier
@@ -263,6 +263,8 @@ fun TelaSenhas() {
 
             // ------------------- DIALOGS DE CATEGORIA ---------------------
             if (showAdicionarCategoria) {
+                val context = LocalContext.current
+
                 AlertDialog(
                     onDismissRequest = { showAdicionarCategoria = false },
                     title = { Text("Nova Categoria", color = verde) },
@@ -288,6 +290,11 @@ fun TelaSenhas() {
                                         .collection("categorias")
                                         .add(categoriaData)
                                         .addOnSuccessListener {
+                                            Toast.makeText(
+                                                context,
+                                                "Categoria adicionada",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                             println("Categoria salva no Firebase.")
                                         }
                                         .addOnFailureListener { e ->
@@ -475,6 +482,7 @@ fun TelaSenhas() {
 
             // ------------------ ALERT DE EDIÇÃO DE SENHA ---------------------
             senhaParaEditar?.let { senha ->
+                val context = LocalContext.current
                 var novoTitulo by remember { mutableStateOf(senha.titulo) }
                 var novoLogin by remember { mutableStateOf(senha.login) }
                 var novaSenha by remember { mutableStateOf(senha.senha) }
@@ -482,7 +490,8 @@ fun TelaSenhas() {
                 var mostrarOpcoesCategoria by remember { mutableStateOf(false) }
                 val bytes = novaSenha.encodeToByteArray()
                 val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
-                val novaSenhaCriptografada = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
+                val novaSenhaCriptografada =
+                    Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
                 val novoIv = Base64.encodeToString(iv, Base64.NO_WRAP)
                 AlertDialog(
                     onDismissRequest = { senhaParaEditar = null },
@@ -490,14 +499,7 @@ fun TelaSenhas() {
                     containerColor = Color.Black,
                     text = {
                         Column {
-                            OutlinedTextField(
-                                value = novoTitulo,
-                                onValueChange = { novoTitulo = it },
-                                label = { Text("Título", color = Color.White) },
-                                textStyle = TextStyle(color = Color.White),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            // CATEGORIA PRIMEIRO
                             OutlinedTextField(
                                 value = novaCategoria,
                                 onValueChange = {},
@@ -525,6 +527,21 @@ fun TelaSenhas() {
                                     }
                                 }
                             }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // TÍTULO OU URL, dependendo da categoria
+                            OutlinedTextField(
+                                value = novoTitulo,
+                                onValueChange = { novoTitulo = it },
+                                label = {
+                                    val labelText = if (novaCategoria == "Sites Web") "URL" else "Título"
+                                    Text(labelText, color = Color.White)
+                                },
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = novoLogin,
@@ -546,7 +563,43 @@ fun TelaSenhas() {
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                val docRef = db.collection("usuarios").document(uid!!).collection("senhas")
+                                // --------- Validação dos campos obrigatórios -----------
+                                if (novaSenha.isBlank() || novaCategoria.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Preencha os campos obrigatórios: Senha e Categoria.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@TextButton
+                                }
+
+                                if (novaCategoria == "Sites Web" && novoTitulo.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Para a categoria 'Sites Web', o campo URL é obrigatório.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@TextButton
+                                }
+                                if (novaCategoria == "Sites Web") {
+                                    val urlJaExiste = listaSenhas.any {
+                                        it.categoria == "Sites Web" &&
+                                                it.titulo == novoTitulo &&
+                                                it.accessToken != senha.accessToken
+                                    }
+
+                                    if (urlJaExiste) {
+                                        Toast.makeText(
+                                            context,
+                                            "Já existe uma senha cadastrada com esse URL.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@TextButton
+                                    }
+                                }
+                                // -------------------------------------------------------
+                                val docRef =
+                                    db.collection("usuarios").document(uid!!).collection("senhas")
                                 docRef.whereEqualTo("accessToken", senha.accessToken).get()
                                     .addOnSuccessListener { query ->
                                         for (document in query) {
@@ -583,6 +636,7 @@ fun TelaSenhas() {
                     }
                 )
             }
+
 
             // ----------------- ALERT DE EXCLUSÃO DE SENHA ---------------------
             senhaParaExcluir?.let { senha ->
@@ -634,10 +688,17 @@ fun TelaSenhas() {
         // -------------- BOTÃO QR CODE (FAB) -------------------
         FloatingActionButton(
             onClick = {
-
-                val intent = Intent(context, EmailVerificationActivity::class.java)
-                context.startActivity(intent)
-                auth.currentUser?.sendEmailVerification()
+                val user = auth.currentUser
+                if (user != null) {
+                    if (!user.isEmailVerified) {
+                        user.sendEmailVerification()
+                        val intent = Intent(context, EmailVerificationActivity::class.java)
+                        context.startActivity(intent)
+                    } else {
+                        val intent = Intent(context, QrScannerActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                }
             },
             containerColor = verde,
             modifier = Modifier
@@ -668,22 +729,7 @@ fun TelaSenhas() {
                 },
                 text = {
                     Column {
-                        OutlinedTextField(
-                            value = titulo,
-                            onValueChange = { titulo = it },
-                            label = { Text("Título (opcional)", color = Color.White) },
-                            textStyle = TextStyle(color = Color.White),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = descricao,
-                            onValueChange = { descricao = it },
-                            label = { Text("Descrição (opcional)", color = Color.White) },
-                            textStyle = TextStyle(color = Color.White),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        // Seletor de Categoria (Agora primeiro campo)
                         OutlinedTextField(
                             value = selectedCategoria,
                             onValueChange = {},
@@ -711,6 +757,40 @@ fun TelaSenhas() {
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Exibe URL ou Título dependendo da categoria
+                        if (selectedCategoria.equals("Sites Web", ignoreCase = true)) {
+                            OutlinedTextField(
+                                value = titulo,
+                                onValueChange = { titulo = it },
+                                label = { Text("URL", color = Color.White) },
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            OutlinedTextField(
+                                value = titulo,
+                                onValueChange = { titulo = it },
+                                label = { Text("Título (opcional)", color = Color.White) },
+                                textStyle = TextStyle(color = Color.White),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = descricao,
+                            onValueChange = { descricao = it },
+                            label = { Text("Descrição (opcional)", color = Color.White) },
+                            textStyle = TextStyle(color = Color.White),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         OutlinedTextField(
                             value = login,
                             onValueChange = { login = it },
@@ -729,14 +809,62 @@ fun TelaSenhas() {
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
                             onClick = {
-                                if (senha.isNotBlank() && selectedCategoria.isNotBlank()) {
+                                // Validação obrigatória para categoria
+                                if (selectedCategoria.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Selecione uma categoria",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
+                                }
+
+                                // Se categoria for Sites Web, URL (titulo) é obrigatório
+                                if (selectedCategoria.equals(
+                                        "Sites Web",
+                                        ignoreCase = true
+                                    ) && titulo.isBlank()
+                                ) {
+                                    Toast.makeText(
+                                        context,
+                                        "Insira a URL do site",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
+                                }
+
+                                if (selectedCategoria.equals("Sites Web", ignoreCase = true)) {
+                                    val urlRepetido = listaSenhas.any {
+                                        it.categoria.equals("Sites Web", ignoreCase = true) &&
+                                                it.titulo.equals(titulo, ignoreCase = true)
+                                    }
+
+                                    if (urlRepetido) {
+                                        Toast.makeText(
+                                            context,
+                                            "Já existe uma senha cadastrada com esse URL.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@Button
+                                    }
+                                }
+
+                                if (senha.isNotBlank()) {
                                     val bytes = senha.encodeToByteArray()
                                     val (iv, senhaCriptografada) = cryptoManager.encrypt(bytes)
                                     val senhaCriptografadaString = Base64.encodeToString(senhaCriptografada, Base64.NO_WRAP)
                                     val ivString = Base64.encodeToString(iv, Base64.NO_WRAP)
                                     val novoToken = gerarAccessToken()
-                                    val novaSenha = Senha(titulo, login, senha, novoToken, selectedCategoria, descricao)
-                                    val novaSenhaCriptografada = SenhaCriptografada(senhaCriptografadaString, ivString)
+                                    val novaSenha = Senha(
+                                        titulo,
+                                        login,
+                                        senha,
+                                        novoToken,
+                                        selectedCategoria,
+                                        descricao
+                                    )
+                                    val novaSenhaCriptografada =
+                                        SenhaCriptografada(senhaCriptografadaString, ivString)
                                     listaSenhas.add(novaSenha)
                                     if (uid != null) {
                                         db.collection("usuarios")
@@ -754,10 +882,18 @@ fun TelaSenhas() {
                                                 )
                                             )
                                             .addOnSuccessListener {
-                                                Toast.makeText(context, "Senha adicionada!", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Senha adicionada!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
                                             .addOnFailureListener {
-                                                Toast.makeText(context, "Erro!", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Erro ao salvar!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
                                     }
                                     titulo = ""
@@ -779,7 +915,6 @@ fun TelaSenhas() {
         }
     }
 }
-
 // ------------------- GERADOR DE ACCESS TOKEN -----------------------
 
 @OptIn(ExperimentalEncodingApi::class)

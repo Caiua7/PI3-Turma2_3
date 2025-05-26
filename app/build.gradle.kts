@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.superid"
-        minSdk = 33
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -62,14 +62,19 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation ("com.google.firebase:firebase-auth-ktx")
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
-    implementation ("androidx.compose.material3:material3:1.3.2") // ou mais recente
+    implementation ("androidx.compose.material3:material3:1.3.2")
     implementation ("androidx.compose.ui:ui:1.5.0")
     implementation ("androidx.activity:activity-compose:1.7.2")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation ("androidx.compose.ui:ui-tooling-preview:1.5.0")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-
+    implementation ("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.extensions)
 
 
 
