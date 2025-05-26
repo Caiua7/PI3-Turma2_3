@@ -95,7 +95,7 @@ export const getLoginStatus = functions.https.onRequest(
 
       // Verifica tentativas
       const tentativas = data.tentativas ?? 0;
-      if (tentativas >= 3 && !data.uid) {
+      if (tentativas >= 2 && !data.uid) {
         await doc.ref.delete();
         response.status(400).
           json({error: "Máximo de tentativas excedido, gere um novo QR Code"});
