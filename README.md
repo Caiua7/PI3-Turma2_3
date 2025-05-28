@@ -18,4 +18,7 @@ Este repositório contém o desenvolvimento do Projeto Integrador do 3° semestr
 - [Rafael Ganzelevitch Almeida](https://github.com/rafalmeida05); - Desenvolvimento Camera do app 
 
 Repositório do Projeto Integrador do 3° semestre do curso de Engenharia de Software | PUC-Campinas
+========================================================================================================================================================
+Para que as funções na parcela Web do projeto funcione, é necessário adicionar um arquivo ".env" na pasta backend com a linha a seguir:
+PARTNER_API_KEY=cghNQhEeygoteuDu8FrtXCkgMDPb4kwpGVuBkvObyLogtQKssYijQjt2YWjw97OKITW8dJL6EEHGtuvkIYrDSNa8TiUsF6qhMpaNEnfwVqkS0t68WiMjwO7SKcePnBDz
 
