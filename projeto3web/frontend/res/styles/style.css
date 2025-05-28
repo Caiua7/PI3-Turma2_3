@@ -1,0 +1,236 @@
+/* Importação da fonte */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Estilos gerais */
+body {
+    background: #F8F8FF;
+    color: #191919;
+}
+
+/* Header */
+#header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 100px;
+    background: #500685 ;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+#logo {
+    font-size: 32px;
+    color: #FF69B4;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+#navigationbar a {
+    font-size: 18px;
+    color: #FF69B4;
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: 40px;
+    position: relative;
+}
+
+#navigationbar a:hover::before {
+    width: 100%;
+}
+
+/* Home Page */
+#HomePage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 50px;
+}
+
+.introduction {
+    max-width: 600px;
+    padding: 30px;
+    background: #FF69B4;
+    border-radius: 20px;
+}
+
+.introduction h1 {
+    font-size: 50px;
+}
+
+.introduction h2, .introduction p {
+    font-size: 20px;
+}
+
+
+/* Página Login & SignUp */
+#login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#wrapper {
+    width: 420px;
+    background: transparent;
+    color: #000000;
+    border-radius: 10px;
+    padding: 30px 40px;
+}
+
+#wrapper h1 {
+    font-size: 36px;
+    text-align: center;
+}
+
+#input-box {
+    width: 100%;
+    height: 50px;
+    margin: 30px 0;
+}
+
+#input-box input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 40px;
+    font-size: 16px;
+    color: #000000;
+    padding: 20px;
+}
+
+#wrapper #btn {
+    width: 100%;
+    height: 50px;
+    background: #FF69B4;
+    border-radius: 40px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #000000;
+    cursor: pointer;
+    margin-top: 17px;
+    
+}
+
+#wrapper #btn2 {
+    width: 100%;
+    height: 50px;
+    font-size: 16px;
+    color: #000000;
+    background: #e0dfe0;
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; 
+    border-radius: 40px;
+    font-weight: 600;
+}
+
+#btn2 img {
+    width: 15px;
+    height: 25px;
+    margin-bottom: 2px;
+  }
+
+#register-link p a {
+    color: #FF69B4;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+#register-link p a:hover {
+    text-decoration: underline;
+}
+
+/* Página About */
+#AboutPage {
+    background: #F8F8FF;
+    padding: 78px 0px;
+    display: flex;
+    justify-content: center;  
+    align-items: center;  
+    height: 100vh;  
+    text-align: center; 
+}
+
+
+#about-text {
+    max-width: 550px;
+    padding: 30px;
+}
+
+#about-text h1 {
+    font-size: 80px;
+}
+
+#about-text h5, #about-text p {
+    font-size: 23px;
+}
+
+span {
+    color: #FF69B4;
+}
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f1f0f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .login-box {
+    background-color: #e0e0e0; /* cinza claro */
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .login-box h2 {
+    margin-bottom: 30px;
+    font-size: 24px;
+    color: #333;
+  }
+
+  .qrcode-area {
+    width: 200px;
+    height: 200px;
+    background-color: white;
+    margin: 0 auto 20px auto;
+    border: 2px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .timer {
+    font-size: 16px;
+    color: #555;
+  }
+
