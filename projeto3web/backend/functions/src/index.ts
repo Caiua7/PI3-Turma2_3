@@ -67,7 +67,6 @@ export const getLoginStatus = functions.https.onRequest(
         return;
       }
 
-      // Busca o documento com esse loginToken
       const snapshot = await admin.firestore()
         .collection("login")
         .where("loginToken", "==", loginToken)
@@ -82,37 +81,41 @@ export const getLoginStatus = functions.https.onRequest(
       const doc = snapshot.docs[0];
       const data = doc.data();
 
-      // Verifica se passou mais de 1 minuto desde a criação
       const createdAt = data.dataHora?.toMillis?.();
       const now = Date.now();
 
+      if (data.uid) {
+        await doc.ref.update({status: "Autenticado"});
+        response.status(200).json({
+          status: "Autenticado",
+          uid: data.uid,
+        });
+        return;
+      }
+
       if (!createdAt || now > createdAt + 60000) {
         await doc.ref.delete();
-        response.status(400).
-          json({error: "Token expirado, gere um novo QR Code"});
+        response.status(400).json({
+          error: "Token expirado, gere um novo QR Code",
+        });
         return;
       }
 
-      // Verifica tentativas
       const tentativas = data.tentativas ?? 0;
-      if (tentativas >= 2 && !data.uid) {
+
+      if (tentativas >= 2) {
         await doc.ref.delete();
-        response.status(400).
-          json({error: "Máximo de tentativas excedido, gere um novo QR Code"});
+        response.status(400).json({
+          error: "Máximo de tentativas excedido, gere um novo QR Code",
+        });
         return;
       }
 
-      const updates: any = {tentativas: tentativas + 1};
-
-      if (data.uid) {
-        updates.status = "Autenticado";
-      }
-
-      await doc.ref.update(updates);
+      await doc.ref.update({tentativas: tentativas + 1});
 
       response.status(200).json({
-        status: data.uid ? "Autenticado" : "Aguardando autenticação",
-        uid: data.uid ?? null,
+        status: "Aguardando autenticação",
+        uid: null,
       });
     } catch (error) {
       console.error("Erro em getLoginStatus:", error);
@@ -120,3 +123,4 @@ export const getLoginStatus = functions.https.onRequest(
     }
   }
 );
+
