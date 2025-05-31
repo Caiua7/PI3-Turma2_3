@@ -81,22 +81,11 @@ export const getLoginStatus = functions.https.onRequest(
       const doc = snapshot.docs[0];
       const data = doc.data();
 
-      const createdAt = data.dataHora?.toMillis?.();
-      const now = Date.now();
-
       if (data.uid) {
         await doc.ref.update({status: "Autenticado"});
         response.status(200).json({
           status: "Autenticado",
           uid: data.uid,
-        });
-        return;
-      }
-
-      if (!createdAt || now > createdAt + 60000) {
-        await doc.ref.delete();
-        response.status(400).json({
-          error: "Token expirado, gere um novo QR Code",
         });
         return;
       }
