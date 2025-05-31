@@ -1,6 +1,9 @@
 let timerInterval;
+let loginFinalizado = false; 
 
 function callPerformAuth() {
+  if (loginFinalizado) return; 
+
   fetch("http://localhost:3000/api/perform-auth", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -19,11 +22,16 @@ function callPerformAuth() {
 
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
+      if (loginFinalizado) {
+        clearInterval(timerInterval);
+        return;
+      }
+
       timeLeft--;
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
         document.getElementById("qrCodeImg").src = "";
-        callPerformAuth();
+        callPerformAuth(); 
       } else {
         timerElement.textContent = `Expira em: ${timeLeft} segundos`;
       }
@@ -31,6 +39,8 @@ function callPerformAuth() {
 
     [15, 35, 60].forEach(delayInSeconds => {
       setTimeout(() => {
+        if (loginFinalizado) return;
+
         fetch("http://localhost:3000/api/get-login-status", {
           method: "POST",
           headers: {
@@ -43,6 +53,8 @@ function callPerformAuth() {
           console.log(` Status aos ${delayInSeconds}s:`, statusData);
 
           if (statusData.uid) {
+            loginFinalizado = true; 
+            clearInterval(timerInterval);
             window.location.href = "../home/HomePage.html";
           }
         })
@@ -50,7 +62,6 @@ function callPerformAuth() {
       }, delayInSeconds * 1000);
     });
 
-     
   })
   .catch(err => {
     console.error("Erro:", err.message);

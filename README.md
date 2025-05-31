@@ -23,3 +23,5 @@ Repositório do Projeto Integrador do 3° semestre do curso de Engenharia de Sof
 PARTNER_API_KEY=cghNQhEeygoteuDu8FrtXCkgMDPb4kwpGVuBkvObyLogtQKssYijQjt2YWjw97OKITW8dJL6EEHGtuvkIYrDSNa8TiUsF6qhMpaNEnfwVqkS0t68WiMjwO7SKcePnBDz
 
 - Instalar as dependência da parte Web é necessário para o funcionamento do projeto. Utilize o comando "npm i" nas pastas "backend" e "functions".
+
+- Para iniciar o servidor web é necessário utilizar o comando "npm run dev" na pasta backend
