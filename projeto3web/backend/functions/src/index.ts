@@ -55,18 +55,18 @@ export const performAuth = functions.https.
     }
   });
 
-
+//função getLoginStatus
 export const getLoginStatus = functions.https.onRequest(
   {region: "southamerica-east1"},
   async (request, response) => {
     try {
       const loginToken = request.headers["login-token"] as string;
-
+      //verifica o logintoken obtido na função performAuth
       if (!loginToken) {
         response.status(400).json({error: "Header loginToken ausente"});
         return;
       }
-
+    
       const snapshot = await admin.firestore()
         .collection("login")
         .where("loginToken", "==", loginToken)
@@ -77,10 +77,10 @@ export const getLoginStatus = functions.https.onRequest(
         response.status(400).json({error: "Token inválido ou expirado"});
         return;
       }
-
+      //pega os dados do documento obtido
       const doc = snapshot.docs[0];
       const data = doc.data();
-
+      //se o uid estiver nos dados, a login funciona corretamente
       if (data.uid) {
         await doc.ref.update({status: "Autenticado"});
         response.status(200).json({
@@ -89,7 +89,7 @@ export const getLoginStatus = functions.https.onRequest(
         });
         return;
       }
-
+      //conta e atualiza as tentativas a cada chamada da função
       const tentativas = data.tentativas ?? 0;
 
       if (tentativas >= 2) {
