@@ -39,7 +39,7 @@ function callPerformAuth() {
       }
     }, 1000);
     //função é chamada 3 vezes (3 tentativas)
-    [15, 35, 60].forEach(delayInSeconds => {
+    [15, 35, 59].forEach(delayInSeconds => {
       setTimeout(() => {
         if (loginFinalizado) return;
 
