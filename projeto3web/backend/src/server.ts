@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.use(routes);
 
-
+//rota para função performAuth
 routes.post("/api/perform-auth", async (req: Request, res: Response) => {
   const site = "www.cursini.com";
   const apiKey = process.env.PARTNER_API_KEY;
@@ -38,6 +38,7 @@ routes.post("/api/perform-auth", async (req: Request, res: Response) => {
   }
 });
 
+//rota para função getLoginStatus
 routes.post("/api/get-login-status", async (req: Request, res: Response) => {
   const loginToken = req.headers["login-token"] as string;
 
@@ -58,11 +59,12 @@ routes.post("/api/get-login-status", async (req: Request, res: Response) => {
   }
 });
 
-
+//rota para loginPartner
 routes.get("/loginPartner", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../frontend/pages/loginPartner/loginPartner.html"));
 });
 
+//mensagem de servidor rodando
 app.listen(port, ()=>{
     console.log(`Server is running on: ${port}`)
 })
